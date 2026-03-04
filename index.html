@@ -3,1386 +3,1201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Gaming Archive - Preservando la Historia del Videojuego</title>
-
-    <!-- GSAP (solo para animaciones SVG) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-
+    <title>Brawl-Lite: Ultimate Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-dark: #0D0D0D;
-            --bg-secondary: #1A1A1A;
-            --bg-tertiary: #242424;
-            --text-primary: #E5E5E5;
-            --text-secondary: #A0A0A0;
-            --accent-red: #D64545;
-            --accent-blue: #4A90E2;
-            --accent-gold: #C9A961;
-            --border-color: #333333;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Russo+One&display=swap');
+        
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-primary);
-            overflow-x: hidden;
-            line-height: 1.6;
-        }
-
-        /* Smooth Background Pattern */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image:
-                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.03) 2px, rgba(255, 255, 255, 0.03) 4px);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .content {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Navigation */
-        nav {
-            position: fixed;
-            width: 100%;
-            padding: 1.5rem 5%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            transition: all 0.3s ease;
-            background: rgba(13, 13, 13, 0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid transparent;
-        }
-
-        nav.scrolled {
-            background: rgba(13, 13, 13, 0.95);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .logo {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
-        }
-
-        .logo span {
-            color: var(--accent-red);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2.5rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            text-decoration: none;
-            color: var(--text-secondary);
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: color 0.3s;
-            position: relative;
-        }
-
-        .nav-links a:hover {
-            color: var(--text-primary);
-        }
-
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            padding: 0 5%;
-        }
-
-        .hero-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .hero-label {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.85rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--accent-red);
-            margin-bottom: 2rem;
-        }
-
-        .hero h1 {
-            font-size: 5rem;
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            letter-spacing: -2px;
-        }
-
-        .hero h1 .gradient-text {
-            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 1.3rem;
-            color: var(--text-secondary);
-            max-width: 700px;
-            margin: 0 auto 3rem;
-            font-weight: 300;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1.5rem;
-            justify-content: center;
-        }
-
-        .btn {
-            padding: 1.2rem 3rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
-            display: inline-block;
-            text-align: center;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background: var(--accent-red);
+            background-color: #020617;
             color: white;
-            border: 2px solid var(--accent-red);
-            box-shadow: 0 4px 15px rgba(214, 69, 69, 0.3);
+            overflow: hidden;
+            font-family: 'Russo One', sans-serif;
+            user-select: none;
+        }
+        
+        canvas {
+            box-shadow: inset 0 0 100px #000;
         }
 
-        .btn-primary:hover {
-            background: #ff4d5a;
-            border-color: #ff4d5a;
+        .hud {
+            font-family: 'Black Ops One', cursive;
+            text-shadow: 2px 2px 0 #000;
+            -webkit-text-stroke: 1px #000;
+        }
+        
+        @keyframes impactShake {
+            0% { transform: translate(0, 0) rotate(0); }
+            50% { transform: translate(5px, 5px) rotate(1deg); }
+            100% { transform: translate(0, 0) rotate(0); }
+        }
+
+        .shake-screen { animation: impactShake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none;
+            transition: opacity 0.1s; mix-blend-mode: overlay; z-index: 5;
+        }
+
+        .char-card { transition: all 0.2s; cursor: pointer; border: 2px solid transparent; }
+        .char-card:hover { transform: scale(1.05); }
+        .player-slot { background: rgba(0,0,0,0.6); border: 1px solid #334155; backdrop-filter: blur(5px); }
+        .player-slot.active { border-color: #22d3ee; background: rgba(6,182,212,0.15); }
+        
+        .btn-neon {
+            background: linear-gradient(45deg, #1e293b, #0f172a);
+            border: 1px solid #475569;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            transition: all 0.2s;
+        }
+        .btn-neon:hover {
+            border-color: #facc15;
+            box-shadow: 0 0 15px rgba(250, 204, 21, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(214, 69, 69, 0.4);
         }
-
-        .btn-secondary {
-            background: transparent;
-            color: var(--text-primary);
-            border: 2px solid var(--border-color);
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--text-primary);
-        }
-
-        /* Section Styles */
-        section {
-            padding: 5rem 5%;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .section-header {
-            margin-bottom: 3rem;
-        }
-
-        .section-label {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.85rem;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: var(--accent-red);
-            margin-bottom: 1rem;
-        }
-
-        .section-header h2 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 1.5rem;
-            letter-spacing: -1px;
-        }
-
-        .section-header p {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            max-width: 700px;
-        }
-
-        /* History Timeline */
-        .timeline {
-            position: relative;
-            padding-left: 50px;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(180deg, var(--accent-red), transparent);
-        }
-
-        .timeline-item {
-            margin-bottom: 4rem;
-            position: relative;
-        }
-
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: -56px;
-            top: 0;
-            width: 14px;
-            height: 14px;
-            background: var(--accent-red);
-            border-radius: 50%;
-            border: 3px solid var(--bg-dark);
-        }
-
-        .timeline-year {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-red);
-            margin-bottom: 0.5rem;
-        }
-
-        .timeline-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .timeline-description {
-            color: var(--text-secondary);
-            line-height: 1.8;
-            max-width: 600px;
-        }
-
-        /* Console Evolution Grid */
-        .console-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .console-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 2rem;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .console-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--accent-red), var(--accent-blue));
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .console-card:hover {
-            border-color: var(--accent-red);
-            transform: translateY(-5px);
-        }
-
-        .console-card:hover::before {
-            opacity: 1;
-        }
-
-        .console-image {
-            width: 100%;
-            height: 200px;
-            background: var(--bg-tertiary);
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .console-image svg {
-            width: 80%;
-            height: 80%;
-            opacity: 0.9;
-        }
-
-        .console-generation {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: var(--accent-red);
-            margin-bottom: 0.5rem;
-        }
-
-        .console-name {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .console-year {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-        }
-
-        .console-specs {
-            list-style: none;
-            padding: 1rem 0;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .console-specs li {
-            padding: 0.4rem 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .console-specs li span:first-child {
-            color: var(--text-primary);
-        }
-
-        /* Games Section */
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 3rem;
-        }
-
-        .game-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-
-        .game-card:hover {
-            border-color: var(--accent-red);
-            transform: translateY(-5px);
-        }
-
-        .game-preview {
-            width: 100%;
-            height: 300px;
-            background: #000;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .game-info {
-            padding: 2rem;
-        }
-
-        .game-title {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .game-description {
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            line-height: 1.8;
-        }
-
-        .game-features {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-        }
-
-        .feature-item::before {
-            content: '●';
-            color: var(--accent-red);
-        }
-
-        /* Stats Section */
-        .stats-section {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 3rem 2rem;
-            margin: 2rem auto;
-            max-width: 1400px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 3rem;
-            text-align: center;
-        }
-
-        .stat-item h3 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--accent-red), var(--accent-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-item p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-
-        /* Evolution Comparison */
-        .evolution-section {
-            background: var(--bg-secondary);
-            border-radius: 20px;
-            padding: 2rem;
-            margin: 2rem 0;
-        }
-
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .comparison-item {
-            text-align: center;
-            padding: 2rem;
-            background: var(--bg-tertiary);
-            border-radius: 12px;
-        }
-
-        .comparison-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--accent-red);
-            margin-bottom: 0.5rem;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .comparison-label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .comparison-tech {
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-top: 0.5rem;
-        }
-
-        /* Footer */
-        footer {
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border-color);
-            padding: 3rem 5%;
-            margin-top: 4rem;
-            text-align: center;
-        }
-
-        footer p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 968px) {
-            section {
-                padding: 3rem 5%;
-            }
-
-            .hero h1 {
-                font-size: 3rem;
-            }
-
-            .hero p {
-                font-size: 1.1rem;
-            }
-
-            .section-header h2 {
-                font-size: 2.5rem;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .games-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .console-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats-section {
-                padding: 2rem 1rem;
-            }
-
-            .comparison-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            }
-        }
-
-        @media (max-width: 600px) {
-            .hero h1 {
-                font-size: 2.2rem;
-            }
-
-            .section-header h2 {
-                font-size: 2rem;
-            }
-
-            .btn {
-                padding: 1rem 2rem;
-                font-size: 1rem;
-            }
-
-            .cta-buttons {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .cta-buttons .btn {
-                width: 100%;
-            }
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-dark);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-red);
-        }
-
-        /* Simple CSS Animations - No GSAP needed */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Apply animations directly to elements */
-        .stats-section {
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        .timeline-item {
-            animation: fadeInUp 0.6s ease-out;
-            animation-fill-mode: both;
-        }
-
-        .timeline-item:nth-child(1) { animation-delay: 0.1s; }
-        .timeline-item:nth-child(2) { animation-delay: 0.2s; }
-        .timeline-item:nth-child(3) { animation-delay: 0.3s; }
-        .timeline-item:nth-child(4) { animation-delay: 0.4s; }
-        .timeline-item:nth-child(5) { animation-delay: 0.5s; }
-        .timeline-item:nth-child(6) { animation-delay: 0.6s; }
-        .timeline-item:nth-child(7) { animation-delay: 0.7s; }
-        .timeline-item:nth-child(8) { animation-delay: 0.8s; }
-        .timeline-item:nth-child(9) { animation-delay: 0.9s; }
-
-        .console-card {
-            animation: fadeInUp 0.6s ease-out;
-            animation-fill-mode: both;
-        }
-
-        .console-card:nth-child(1) { animation-delay: 0.1s; }
-        .console-card:nth-child(2) { animation-delay: 0.2s; }
-        .console-card:nth-child(3) { animation-delay: 0.3s; }
-        .console-card:nth-child(4) { animation-delay: 0.4s; }
-        .console-card:nth-child(5) { animation-delay: 0.5s; }
-        .console-card:nth-child(6) { animation-delay: 0.6s; }
-        .console-card:nth-child(7) { animation-delay: 0.7s; }
-        .console-card:nth-child(8) { animation-delay: 0.8s; }
-        .console-card:nth-child(9) { animation-delay: 0.9s; }
-
-        .game-card {
-            animation: fadeInUp 0.8s ease-out;
-            animation-fill-mode: both;
-            opacity: 1;
-        }
-
-        .game-card:nth-child(1) { animation-delay: 0.2s; }
-        .game-card:nth-child(2) { animation-delay: 0.4s; }
     </style>
 </head>
-<body>
-    <div class="content">
-        <!-- Navigation -->
-        <nav id="navbar">
-            <div class="logo">RETRO<span>GAMING</span></div>
-            <ul class="nav-links">
-                <li><a href="#home">Inicio</a></li>
-                <li><a href="#historia">Historia</a></li>
-                <li><a href="#consolas">Consolas</a></li>
-                <li><a href="#juegos">Juegos</a></li>
-            </ul>
-        </nav>
+<body class="flex flex-col items-center justify-center h-screen relative">
 
-        <!-- Hero Section -->
-        <section class="hero" id="home">
-            <div class="hero-content">
-                <div class="hero-label">Preservando la Historia del Videojuego</div>
-                <h1>
-                    <span class="gradient-text">El Legado del</span><br>
-                    Gaming Clásico
-                </h1>
-                <p>
-                    Explora la evolución de las consolas de videojuegos desde sus humildes
-                    comienzos hasta las revolucionarias máquinas que definieron generaciones enteras.
-                </p>
-                <div class="cta-buttons">
-                    <a href="#juegos" class="btn btn-primary">Explorar Juegos</a>
-                    <a href="#historia" class="btn btn-secondary">Ver Historia</a>
+    <div id="flash-overlay"></div>
+
+    <!-- Pause Menu -->
+    <div id="pause-menu" class="hidden absolute z-50 w-full h-full bg-black/70 backdrop-blur-sm flex items-center justify-center">
+        <div class="bg-slate-900 p-8 rounded-2xl border-2 border-slate-600 shadow-2xl flex flex-col gap-4 w-80 text-center">
+            <h2 class="text-4xl hud text-white mb-4">PAUSA</h2>
+            <button onclick="togglePause()" class="btn-neon py-3 rounded text-xl text-green-400 font-bold">CONTINUAR</button>
+            <button onclick="returnToLobby()" class="btn-neon py-3 rounded text-xl text-yellow-400 font-bold">LOBBY</button>
+            <button onclick="quitGame()" class="btn-neon py-3 rounded text-xl text-red-500 font-bold">SALIR</button>
+        </div>
+    </div>
+
+    <!-- UI Overlay (HUD) -->
+    <div id="ui-layer" class="absolute top-0 w-full h-full pointer-events-none z-10 hidden flex-col justify-between p-6">
+        <!-- Top Row -->
+        <div class="flex justify-between w-full relative">
+            <!-- Sound Toggle -->
+            <button id="sound-btn" onclick="toggleSound()" class="absolute top-0 right-0 pointer-events-auto bg-slate-800 p-2 rounded border border-slate-600 text-white hover:bg-slate-700 z-50">
+                🔊
+            </button>
+
+            <!-- P1 -->
+            <div id="hud-p1" class="flex flex-col items-start w-64 opacity-50">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="p1-icon w-8 h-8 bg-red-500 border-2 border-white transform rotate-45"></div>
+                    <span class="text-xl text-red-400 font-bold">P1</span>
+                </div>
+                <div class="flex items-center gap-1 mb-2 bg-black/50 px-2 rounded border border-red-900">
+                    <span class="text-lg">💀</span>
+                    <span class="p1-kills text-xl font-bold text-red-400">0</span>
                 </div>
             </div>
-        </section>
-
-        <!-- Stats Section -->
-        <section style="padding: 2rem 5%;">
-        <div class="stats-section">
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <h3>50+</h3>
-                    <p>Años de Historia</p>
+            <!-- Game Info -->
+            <div class="flex flex-col items-center">
+                <h1 class="text-3xl hud text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600">DEATHMATCH</h1>
+                <div class="text-xs text-yellow-200/70 tracking-[0.3em] font-bold">20 KILLS GANA</div>
+                <div id="game-message" class="text-2xl font-bold text-white drop-shadow-md hidden mt-4 bg-red-600/90 px-8 py-2 rounded border-2 border-white animate-pulse"></div>
+            </div>
+            <!-- P2 -->
+            <div id="hud-p2" class="flex flex-col items-end w-64 opacity-50 mr-12">
+                <div class="flex items-center gap-2 mb-1 flex-row-reverse">
+                    <div class="p2-icon w-8 h-8 bg-cyan-500 border-2 border-white rounded-full"></div>
+                    <span class="text-xl text-cyan-400 font-bold">P2</span>
                 </div>
-                <div class="stat-item">
-                    <h3>9</h3>
-                    <p>Generaciones</p>
-                </div>
-                <div class="stat-item">
-                    <h3>100+</h3>
-                    <p>Consolas Diferentes</p>
-                </div>
-                <div class="stat-item">
-                    <h3>∞</h3>
-                    <p>Memorias Creadas</p>
+                <div class="flex items-center gap-1 mb-2 bg-black/50 px-2 rounded border border-cyan-900">
+                    <span class="text-lg">💀</span>
+                    <span class="p2-kills text-xl font-bold text-cyan-400">0</span>
                 </div>
             </div>
         </div>
-        </section>
-
-        <!-- History Section -->
-        <section id="historia">
-            <div class="section-header">
-                <div class="section-label">Historia</div>
-                <h2>La Evolución del Gaming</h2>
-                <p>
-                    Desde los primeros píxeles hasta mundos tridimensionales, cada generación
-                    marcó un hito en la historia del entretenimiento interactivo.
-                </p>
-            </div>
-
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-year">1972-1977</div>
-                    <div class="timeline-title">Primera Generación - Los Pioneros</div>
-                    <div class="timeline-description">
-                        Magnavox Odyssey (1972) inició la era de las consolas domésticas. Con gráficos
-                        simples y jugabilidad básica, plantó las semillas de una industria billonaria.
-                        Atari Pong (1975) popularizó los videojuegos en hogares de todo el mundo,
-                        demostrando que el entretenimiento electrónico tenía futuro.
-                    </div>
+        <!-- Bottom Row -->
+        <div class="flex justify-between w-full items-end">
+            <!-- P3 -->
+            <div id="hud-p3" class="flex flex-col items-start w-64 opacity-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="p3-icon w-8 h-8 bg-green-500 border-2 border-white transform skew-x-12"></div>
+                    <span class="text-xl text-green-400 font-bold">P3</span>
                 </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">1976-1983</div>
-                    <div class="timeline-title">Segunda Generación - La Era de los Cartuchos</div>
-                    <div class="timeline-description">
-                        Atari 2600 (1977) revolucionó el mercado con su sistema de cartuchos intercambiables,
-                        permitiendo una biblioteca de juegos expandible. Esta generación vio el nacimiento
-                        de franquicias icónicas como Space Invaders y Pac-Man, estableciendo los videojuegos
-                        como fenómeno cultural. Sin embargo, terminó con el crash de 1983, causado por
-                        saturación del mercado y juegos de baja calidad.
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">1983-1992</div>
-                    <div class="timeline-title">Tercera Generación - El Renacimiento</div>
-                    <div class="timeline-description">
-                        Nintendo Entertainment System (NES, 1983) salvó la industria tras el crash.
-                        Con títulos legendarios como Super Mario Bros., The Legend of Zelda y Metroid,
-                        Nintendo estableció estándares de calidad y diseño que perduran. La introducción
-                        del control D-pad y el chip de bloqueo de seguridad marcaron nuevos paradigmas.
-                        Procesadores de 8-bit permitieron mundos más complejos y jugabilidad más profunda.
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">1987-1996</div>
-                    <div class="timeline-title">Cuarta Generación - La Guerra de los 16-bits</div>
-                    <div class="timeline-description">
-                        Sega Genesis (1988) y Super Nintendo (1990) protagonizaron una de las rivalidades
-                        más intensas del gaming. Los 16-bit trajeron gráficos más detallados, paletas de
-                        colores expandidas y audio de calidad superior. Sonic vs Mario definió lealtades
-                        generacionales. Los juegos alcanzaron nueva sofisticación narrativa y técnica,
-                        con títulos como Final Fantasy VI, Street Fighter II y Sonic the Hedgehog.
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">1993-2002</div>
-                    <div class="timeline-title">Quinta Generación - El Salto al 3D</div>
-                    <div class="timeline-description">
-                        Sony PlayStation (1994), Sega Saturn (1994) y Nintendo 64 (1996) introdujeron
-                        los polígonos 3D a las masas. PlayStation dominó con su CD-ROM, ofreciendo
-                        capacidad de almacenamiento masiva comparada con cartuchos. Títulos como
-                        Final Fantasy VII, Metal Gear Solid y Super Mario 64 redefinieron lo posible
-                        en narrativa, jugabilidad y diseño de mundos. El stick analógico se convirtió
-                        en estándar para navegación 3D.
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">1998-2013</div>
-                    <div class="timeline-title">Sexta Generación - La Era Online</div>
-                    <div class="timeline-description">
-                        Dreamcast (1998), PlayStation 2 (2000), GameCube (2001) y Xbox (2001) llevaron
-                        el gaming al nuevo milenio. PS2 se convirtió en la consola más vendida de la
-                        historia (155M unidades). Xbox introdujo Xbox Live, revolucionando el multijugador
-                        online. Los juegos alcanzaron calidad casi cinematográfica con títulos como
-                        Grand Theft Auto III, Halo y Resident Evil 4. DVD y capacidad multimedia
-                        convirtieron las consolas en centros de entretenimiento.
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">2005-2017</div>
-                    <div class="timeline-title">Séptima Generación - HD y Motion Control</div>
-                    <div class="timeline-description">
-                        Xbox 360 (2005), PlayStation 3 (2006) y Wii (2006) definieron una era.
-                        360 y PS3 compitieron en gráficos HD y servicios online robustos, mientras
-                        Wii revolucionó con controles de movimiento, atrayendo audiencias no tradicionales.
-                        Gráficos de alta definición, almacenamiento masivo (Blu-ray en PS3) y conectividad
-                        constante transformaron expectativas. Surgieron los logros/trofeos, streaming
-                        de contenido y descargas digitales como norma.
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">2012-2020</div>
-                    <div class="timeline-title">Octava Generación - Potencia y Portabilidad</div>
-                    <div class="timeline-description">
-                        Wii U (2012), PlayStation 4 (2013), Xbox One (2013) y Nintendo Switch (2017)
-                        ofrecieron experiencias diversificadas. PS4 dominó con exclusivas de calidad
-                        como The Last of Us Part II y God of War. Switch revolucionó combinando gaming
-                        hogareño y portátil en un dispositivo híbrido. Realidad virtual emergió con
-                        PlayStation VR. Procesadores x86 facilitaron ports y desarrollo multiplataforma.
-                        Servicios de suscripción como PlayStation Plus y Xbox Game Pass cambiaron
-                        modelos de negocio.
-                    </div>
-                </div>
-
-                <div class="timeline-item">
-                    <div class="timeline-year">2020-Presente</div>
-                    <div class="timeline-title">Novena Generación - Ray Tracing y SSD</div>
-                    <div class="timeline-description">
-                        PlayStation 5 y Xbox Series X/S (ambas 2020) introdujeron ray tracing en tiempo
-                        real, SSDs ultra-rápidos eliminando tiempos de carga, y audio 3D inmersivo.
-                        Capacidad de 4K a 60fps (120fps en algunos títulos) y retrocompatibilidad extensa.
-                        Los SSDs custom no solo aceleran carga sino permiten diseños de niveles imposibles
-                        anteriormente. Arquitectura AMD Zen 2 y RDNA 2 brindan potencia de PC gaming.
-                        Cloud gaming y Game Pass definen el futuro del acceso a contenido.
-                    </div>
+                <div class="flex items-center gap-1 mb-2 bg-black/50 px-2 rounded border border-green-900">
+                    <span class="text-lg">💀</span>
+                    <span class="p3-kills text-xl font-bold text-green-400">0</span>
                 </div>
             </div>
-        </section>
-
-        <!-- Console Evolution -->
-        <section id="consolas">
-            <div class="section-header">
-                <div class="section-label">Evolución Tecnológica</div>
-                <h2>Consolas que Definieron Eras</h2>
-                <p>
-                    Cada generación superó a la anterior en potencia, capacidad y experiencia de usuario.
-                </p>
-            </div>
-
-            <!-- Evolution Comparison -->
-            <div class="evolution-section">
-                <h3 style="margin-bottom: 2rem; font-size: 1.8rem;">De 8-bits a Arquitecturas Modernas</h3>
-                <div class="comparison-grid">
-                    <div class="comparison-item">
-                        <div class="comparison-value">1.79 MHz</div>
-                        <div class="comparison-label">CPU NES (1983)</div>
-                        <div class="comparison-tech">8-bit MOS 6502</div>
-                    </div>
-                    <div class="comparison-item">
-                        <div class="comparison-value">3.58 MHz</div>
-                        <div class="comparison-label">CPU SNES (1990)</div>
-                        <div class="comparison-tech">16-bit Ricoh 5A22</div>
-                    </div>
-                    <div class="comparison-item">
-                        <div class="comparison-value">33 MHz</div>
-                        <div class="comparison-label">CPU PS1 (1994)</div>
-                        <div class="comparison-tech">32-bit MIPS R3000</div>
-                    </div>
-                    <div class="comparison-item">
-                        <div class="comparison-value">294 MHz</div>
-                        <div class="comparison-label">CPU PS2 (2000)</div>
-                        <div class="comparison-tech">128-bit Emotion Engine</div>
-                    </div>
-                    <div class="comparison-item">
-                        <div class="comparison-value">3.2 GHz</div>
-                        <div class="comparison-label">CPU Xbox 360 (2005)</div>
-                        <div class="comparison-tech">PowerPC Tri-Core</div>
-                    </div>
-                    <div class="comparison-item">
-                        <div class="comparison-value">3.5 GHz</div>
-                        <div class="comparison-label">CPU PS5 (2020)</div>
-                        <div class="comparison-tech">AMD Zen 2 8-Core</div>
-                    </div>
+            <!-- P4 -->
+            <div id="hud-p4" class="flex flex-col items-end w-64 opacity-0">
+                <div class="flex items-center gap-2 mb-1 flex-row-reverse">
+                    <div class="p4-icon w-8 h-8 bg-purple-500 border-2 border-white transform rotate-12"></div>
+                    <span class="text-xl text-purple-400 font-bold">P4</span>
+                </div>
+                <div class="flex items-center gap-1 mb-2 bg-black/50 px-2 rounded border border-purple-900">
+                    <span class="text-lg">💀</span>
+                    <span class="p4-kills text-xl font-bold text-purple-400">0</span>
                 </div>
             </div>
-
-            <div class="console-grid">
-                <!-- NES -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="20" y="40" width="160" height="60" rx="5" fill="#8B8B8B"/>
-                            <rect x="25" y="45" width="150" height="50" rx="3" fill="#6B6B6B"/>
-                            <rect x="30" y="50" width="50" height="40" rx="2" fill="#3B3B3B"/>
-                            <rect x="135" y="60" width="30" height="5" rx="2" fill="#C41E3A"/>
-                            <rect x="135" y="70" width="30" height="5" rx="2" fill="#C41E3A"/>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Tercera Generación</div>
-                    <h3 class="console-name">Nintendo Entertainment System</h3>
-                    <div class="console-year">1983 • Nintendo</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>1.79 MHz</span></li>
-                        <li><span>RAM</span><span>2 KB</span></li>
-                        <li><span>Resolución</span><span>256×240</span></li>
-                        <li><span>Colores</span><span>54</span></li>
-                        <li><span>Ventas</span><span>61.91M</span></li>
-                    </ul>
-                </div>
-
-                <!-- Sega Genesis -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="20" y="35" width="160" height="65" rx="5" fill="#2B2B2B"/>
-                            <rect x="25" y="40" width="150" height="55" rx="3" fill="#1B1B1B"/>
-                            <rect x="140" y="50" width="25" height="12" rx="2" fill="#FFD700"/>
-                            <text x="100" y="75" font-family="Arial, sans-serif" font-size="14" fill="#FFD700" text-anchor="middle" font-weight="bold">SEGA</text>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Cuarta Generación</div>
-                    <h3 class="console-name">Sega Genesis / Mega Drive</h3>
-                    <div class="console-year">1988 • Sega</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>7.6 MHz</span></li>
-                        <li><span>RAM</span><span>64 KB</span></li>
-                        <li><span>Resolución</span><span>320×224</span></li>
-                        <li><span>Colores</span><span>512</span></li>
-                        <li><span>Ventas</span><span>30.75M</span></li>
-                    </ul>
-                </div>
-
-                <!-- SNES -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="20" y="40" width="160" height="60" rx="8" fill="#D3D3D3"/>
-                            <rect x="25" y="45" width="150" height="50" rx="5" fill="#B8B8B8"/>
-                            <circle cx="50" cy="70" r="3" fill="#6B6B6B"/>
-                            <rect x="140" y="60" width="25" height="8" rx="4" fill="#9370DB"/>
-                            <rect x="140" y="72" width="25" height="8" rx="4" fill="#9370DB"/>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Cuarta Generación</div>
-                    <h3 class="console-name">Super Nintendo Entertainment System</h3>
-                    <div class="console-year">1990 • Nintendo</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>3.58 MHz</span></li>
-                        <li><span>RAM</span><span>128 KB</span></li>
-                        <li><span>Resolución</span><span>512×448</span></li>
-                        <li><span>Colores</span><span>32,768</span></li>
-                        <li><span>Ventas</span><span>49.10M</span></li>
-                    </ul>
-                </div>
-
-                <!-- PlayStation -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="30" y="35" width="140" height="70" rx="4" fill="#9E9E9E"/>
-                            <rect x="35" y="40" width="130" height="60" rx="3" fill="#7E7E7E"/>
-                            <circle cx="60" cy="70" r="15" fill="#5E5E5E"/>
-                            <text x="100" y="55" font-family="Arial, sans-serif" font-size="8" fill="#000" text-anchor="middle">PlayStation</text>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Quinta Generación</div>
-                    <h3 class="console-name">Sony PlayStation</h3>
-                    <div class="console-year">1994 • Sony</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>33.87 MHz</span></li>
-                        <li><span>RAM</span><span>2 MB</span></li>
-                        <li><span>GPU</span><span>1M polígonos/s</span></li>
-                        <li><span>Medio</span><span>CD-ROM</span></li>
-                        <li><span>Ventas</span><span>102.49M</span></li>
-                    </ul>
-                </div>
-
-                <!-- Nintendo 64 -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="25" y="40" width="150" height="60" rx="5" fill="#3B3B3B"/>
-                            <rect x="30" y="45" width="140" height="50" rx="3" fill="#2B2B2B"/>
-                            <text x="100" y="75" font-family="Arial, sans-serif" font-size="20" fill="#FF0000" text-anchor="middle" font-weight="bold">N64</text>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Quinta Generación</div>
-                    <h3 class="console-name">Nintendo 64</h3>
-                    <div class="console-year">1996 • Nintendo</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>93.75 MHz</span></li>
-                        <li><span>RAM</span><span>4 MB</span></li>
-                        <li><span>GPU</span><span>150K polígonos/s</span></li>
-                        <li><span>Medio</span><span>Cartucho</span></li>
-                        <li><span>Ventas</span><span>32.93M</span></li>
-                    </ul>
-                </div>
-
-                <!-- PlayStation 2 -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="40" y="20" width="120" height="90" rx="3" fill="#1A1A1A"/>
-                            <rect x="45" y="25" width="110" height="80" rx="2" fill="#0A0A0A"/>
-                            <rect x="85" y="30" width="30" height="3" fill="#4169E1"/>
-                            <text x="100" y="70" font-family="Arial, sans-serif" font-size="12" fill="#4169E1" text-anchor="middle" font-weight="bold">PS2</text>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Sexta Generación</div>
-                    <h3 class="console-name">PlayStation 2</h3>
-                    <div class="console-year">2000 • Sony</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>294 MHz</span></li>
-                        <li><span>RAM</span><span>32 MB</span></li>
-                        <li><span>GPU</span><span>75M polígonos/s</span></li>
-                        <li><span>Medio</span><span>DVD-ROM</span></li>
-                        <li><span>Ventas</span><span>155M</span></li>
-                    </ul>
-                </div>
-
-                <!-- Xbox 360 -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <rect x="30" y="30" width="140" height="70" rx="10" fill="#E8E8E8"/>
-                            <rect x="35" y="35" width="130" height="60" rx="8" fill="#D8D8D8"/>
-                            <circle cx="100" cy="65" r="20" fill="#9ACD32"/>
-                            <path d="M 90 55 Q 100 65 110 55" stroke="#fff" stroke-width="3" fill="none"/>
-                            <path d="M 90 75 Q 100 65 110 75" stroke="#fff" stroke-width="3" fill="none"/>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Séptima Generación</div>
-                    <h3 class="console-name">Xbox 360</h3>
-                    <div class="console-year">2005 • Microsoft</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>3.2 GHz (3 cores)</span></li>
-                        <li><span>RAM</span><span>512 MB</span></li>
-                        <li><span>GPU</span><span>500M polígonos/s</span></li>
-                        <li><span>Resolución</span><span>1080p</span></li>
-                        <li><span>Ventas</span><span>84M</span></li>
-                    </ul>
-                </div>
-
-                <!-- PlayStation 4 -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M 40 40 L 160 40 L 155 95 L 45 95 Z" fill="#1A1A1A"/>
-                            <path d="M 45 45 L 155 45 L 150 90 L 50 90 Z" fill="#0A0A0A"/>
-                            <rect x="85" y="50" width="30" height="2" fill="#0070CC"/>
-                            <text x="100" y="75" font-family="Arial, sans-serif" font-size="10" fill="#0070CC" text-anchor="middle" font-weight="bold">PS4</text>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Octava Generación</div>
-                    <h3 class="console-name">PlayStation 4</h3>
-                    <div class="console-year">2013 • Sony</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>1.6 GHz (8 cores)</span></li>
-                        <li><span>RAM</span><span>8 GB GDDR5</span></li>
-                        <li><span>GPU</span><span>1.84 TFLOPS</span></li>
-                        <li><span>Resolución</span><span>4K HDR</span></li>
-                        <li><span>Ventas</span><span>117M</span></li>
-                    </ul>
-                </div>
-
-                <!-- PlayStation 5 -->
-                <div class="console-card">
-                    <div class="console-image">
-                        <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M 70 20 Q 65 60 70 100 L 80 100 Q 75 60 80 20 Z" fill="#F0F0F0"/>
-                            <path d="M 120 20 Q 125 60 120 100 L 130 100 Q 135 60 130 20 Z" fill="#F0F0F0"/>
-                            <rect x="82" y="30" width="36" height="70" rx="2" fill="#0A0A0A"/>
-                            <rect x="85" y="45" width="3" height="15" fill="#0070CC"/>
-                            <text x="100" y="75" font-family="Arial, sans-serif" font-size="10" fill="#0070CC" text-anchor="middle" font-weight="bold">PS5</text>
-                        </svg>
-                    </div>
-                    <div class="console-generation">Novena Generación</div>
-                    <h3 class="console-name">PlayStation 5</h3>
-                    <div class="console-year">2020 • Sony</div>
-                    <ul class="console-specs">
-                        <li><span>CPU</span><span>3.5 GHz (8 cores)</span></li>
-                        <li><span>RAM</span><span>16 GB GDDR6</span></li>
-                        <li><span>GPU</span><span>10.28 TFLOPS</span></li>
-                        <li><span>SSD</span><span>825 GB NVMe</span></li>
-                        <li><span>Ray Tracing</span><span>Hardware</span></li>
-                    </ul>
-                </div>
-            </div>
-        </section>
-
-        <!-- Games Section -->
-        <section id="juegos">
-            <div class="section-header">
-                <div class="section-label">Juegos Clásicos</div>
-                <h2>Experimenta los Clásicos</h2>
-                <p>
-                    Juega versiones fielmente recreadas de los títulos que definieron generaciones.
-                </p>
-            </div>
-
-            <div class="games-grid">
-                <!-- Galaxian -->
-                <div class="game-card">
-                    <div class="game-preview">
-                        <svg width="100%" height="100%" viewBox="0 0 400 300">
-                            <defs>
-                                <filter id="glow">
-                                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur"/>
-                                        <feMergeNode in="SourceGraphic"/>
-                                    </feMerge>
-                                </filter>
-                                <linearGradient id="starGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#fff;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#888;stop-opacity:0.5" />
-                                </linearGradient>
-                            </defs>
-
-                            <!-- Moving stars background -->
-                            <circle cx="50" cy="30" r="1.5" fill="url(#starGradient)"/>
-                            <circle cx="100" cy="80" r="1" fill="#ff0"/>
-                            <circle cx="200" cy="40" r="1.2" fill="#fff"/>
-                            <circle cx="300" cy="120" r="1" fill="#f00"/>
-                            <circle cx="150" cy="150" r="1" fill="#888"/>
-                            <circle cx="320" cy="60" r="1.5" fill="#fff"/>
-
-                            <!-- Formation enemies (colorful Galaxian style) -->
-                            <!-- Blue Drones -->
-                            <g class="galaxian-blue" fill="#20aefd" filter="url(#glow)">
-                                <ellipse cx="80" cy="60" rx="16" ry="12"/>
-                                <rect x="72" y="56" width="4" height="4" fill="#ff0"/>
-                                <rect x="84" y="56" width="4" height="4" fill="#ff0"/>
-                                <polygon points="68,66 72,72 76,66" fill="#20aefd"/>
-                                <polygon points="84,66 88,72 92,66" fill="#20aefd"/>
-                            </g>
-
-                            <!-- Purple Emissary -->
-                            <g class="galaxian-purple" fill="#a020f0" filter="url(#glow)">
-                                <ellipse cx="140" cy="50" rx="18" ry="14"/>
-                                <rect x="131" y="46" width="4" height="4" fill="#fff"/>
-                                <rect x="145" y="46" width="4" height="4" fill="#fff"/>
-                                <polygon points="128,60 132,68 136,60" fill="#a020f0"/>
-                                <polygon points="144,60 148,68 152,60" fill="#a020f0"/>
-                            </g>
-
-                            <!-- Red Hornet -->
-                            <g class="galaxian-red" fill="#f00" filter="url(#glow)">
-                                <ellipse cx="200" cy="45" rx="18" ry="14"/>
-                                <rect x="191" y="41" width="4" height="4" fill="#ff0"/>
-                                <rect x="205" y="41" width="4" height="4" fill="#ff0"/>
-                                <polygon points="188,55 192,62 196,55" fill="#f00"/>
-                                <polygon points="204,55 208,62 212,55" fill="#f00"/>
-                            </g>
-
-                            <!-- Yellow Flagship (diving) -->
-                            <g class="galaxian-flagship" filter="url(#glow)">
-                                <ellipse cx="260" cy="140" rx="20" ry="16" fill="#ff0"/>
-                                <rect x="250" y="135" width="5" height="5" fill="#f00"/>
-                                <rect x="265" y="135" width="5" height="5" fill="#f00"/>
-                                <polygon points="246,152 252,162 258,152" fill="#20aefd"/>
-                                <polygon points="262,152 268,162 274,152" fill="#20aefd"/>
-                                <!-- Diving trail effect -->
-                                <path d="M 260,100 Q 240,120 260,140" stroke="#ff0" stroke-width="2" fill="none" opacity="0.5">
-                                    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite"/>
-                                </path>
-                            </g>
-
-                            <!-- Player ship (white with red accents) -->
-                            <g fill="#fff" filter="url(#glow)">
-                                <polygon points="200,260 190,275 210,275" fill="#fff"/>
-                                <rect x="195" y="268" width="10" height="3" fill="#f00"/>
-                                <rect x="188" y="273" width="5" height="4" fill="#f00"/>
-                                <rect x="207" y="273" width="5" height="4" fill="#f00"/>
-                            </g>
-
-                            <!-- Yellow laser bullet -->
-                            <rect x="198" y="200" width="4" height="15" fill="#ff0" filter="url(#glow)">
-                                <animate attributeName="y" from="250" to="80" dur="0.6s" repeatCount="indefinite"/>
-                            </rect>
-
-                            <!-- Red enemy bullet -->
-                            <rect x="258" y="160" width="4" height="12" fill="#f00" filter="url(#glow)">
-                                <animate attributeName="y" from="160" to="280" dur="1.2s" repeatCount="indefinite"/>
-                            </rect>
-                        </svg>
-                    </div>
-                    <div class="game-info">
-                        <h3 class="game-title">Galaxian</h3>
-                        <p class="game-description">
-                            El revolucionario shooter arcade de 1979 que introdujo enemigos con movimiento
-                            en picada. Enfrenta oleadas de alienígenas coloridos que atacan en formaciones
-                            kamikaze en este clásico que elevó el género a nuevas alturas.
-                        </p>
-                        <div class="game-features">
-                            <div class="feature-item">Enemigos con IA de ataque en picada</div>
-                            <div class="feature-item">Sprites a todo color</div>
-                            <div class="feature-item">Sistema de oleadas progresivas</div>
-                            <div class="feature-item">Campo de estrellas en movimiento</div>
-                        </div>
-                        <a href="space-invaders.html" class="btn btn-primary">Jugar Ahora</a>
-                    </div>
-                </div>
-
-                <!-- Battle City -->
-                <div class="game-card">
-                    <div class="game-preview">
-                        <svg width="100%" height="100%" viewBox="0 0 400 300">
-                            <defs>
-                                <filter id="glow-battlecity">
-                                    <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                                    <feMerge>
-                                        <feMergeNode in="coloredBlur"/>
-                                        <feMergeNode in="SourceGraphic"/>
-                                    </feMerge>
-                                </filter>
-                                <pattern id="grid-battlecity" width="20" height="20" patternUnits="userSpaceOnUse">
-                                    <rect width="20" height="20" fill="#0a0a0a"/>
-                                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1a1a1a" stroke-width="0.5"/>
-                                </pattern>
-                            </defs>
-                            <rect width="400" height="300" fill="url(#grid-battlecity)"/>
-
-                            <g fill="#8B4513">
-                                <rect x="50" y="50" width="20" height="20"/>
-                                <rect x="70" y="50" width="20" height="20"/>
-                                <rect x="200" y="80" width="20" height="20"/>
-                                <rect x="220" y="80" width="20" height="20"/>
-                            </g>
-
-                            <g fill="#C0C0C0">
-                                <rect x="150" y="120" width="20" height="20"/>
-                                <rect x="170" y="120" width="20" height="20"/>
-                            </g>
-
-                            <g class="enemy-tank" fill="#D64545" filter="url(#glow-battlecity)">
-                                <rect x="50" y="20" width="25" height="25"/>
-                                <rect x="58" y="10" width="9" height="15"/>
-                                <rect x="62" y="5" width="1" height="10"/>
-                            </g>
-
-                            <g fill="#C9A961" filter="url(#glow-battlecity)">
-                                <rect x="180" y="250" width="30" height="30"/>
-                                <rect x="190" y="235" width="10" height="20"/>
-                                <rect x="194" y="225" width="2" height="15"/>
-                            </g>
-
-                            <g fill="#4A90E2">
-                                <rect x="340" y="260" width="30" height="30"/>
-                                <polygon points="355,265 345,275 365,275" fill="#C9A961"/>
-                            </g>
-                        </svg>
-                    </div>
-                    <div class="game-info">
-                        <h3 class="game-title">Battle City</h3>
-                        <p class="game-description">
-                            El legendario juego de tanques de 1985. Protege tu base de
-                            oleadas de tanques enemigos mientras destruyes obstáculos y
-                            recolectas power-ups en niveles desafiantes.
-                        </p>
-                        <div class="game-features">
-                            <div class="feature-item">35 niveles únicos</div>
-                            <div class="feature-item">4 tipos de enemigos</div>
-                            <div class="feature-item">Destrucción de escenarios</div>
-                            <div class="feature-item">IA enemiga avanzada</div>
-                        </div>
-                        <a href="battle-city.html" class="btn btn-primary">Jugar Ahora</a>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer>
-            <p>Retro Gaming Archive © 2026 • Preservando la Historia del Videojuego</p>
-            <p style="margin-top: 1rem; opacity: 0.6;">
-                Todas las marcas y logotipos son propiedad de sus respectivos dueños.
-            </p>
-        </footer>
+        </div>
     </div>
 
+    <!-- Menus -->
+    <div id="start-screen" class="absolute z-20 bg-slate-950 w-full h-full flex flex-col items-center justify-center p-8 overflow-y-auto" style="background-image: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%);">
+        <h1 class="text-7xl hud text-white mb-2 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">ARENA <span class="text-yellow-400">MASTER</span></h1>
+        
+        <div id="mode-menu" class="flex gap-6 mb-8 mt-8">
+            <button onclick="setupLocal()" class="w-64 py-6 bg-slate-800 hover:bg-slate-700 rounded-xl font-bold text-2xl border-2 border-slate-600 transition shadow-xl group">
+                <div class="text-slate-400 group-hover:text-white transition">LOCAL</div>
+                <div class="text-sm text-slate-500 font-normal">2 Jugadores</div>
+            </button>
+            <button onclick="setupOnline()" class="w-64 py-6 bg-blue-900/50 hover:bg-blue-800/80 rounded-xl font-bold text-2xl border-2 border-blue-500 transition shadow-[0_0_20px_rgba(59,130,246,0.3)] group">
+                <div class="text-blue-400 group-hover:text-white transition">ONLINE</div>
+                <div class="text-sm text-blue-300/50 font-normal">Hasta 4 Jugadores</div>
+            </button>
+        </div>
+
+        <div id="lobby-menu" class="hidden w-full max-w-5xl flex-col items-center gap-8 animate-fade-in">
+            <div class="flex justify-between w-full bg-slate-900/80 p-6 rounded-2xl border border-slate-700 shadow-2xl backdrop-blur">
+                <div class="flex gap-4 items-center">
+                    <span class="text-gray-400 font-bold">SALA ID:</span>
+                    <input id="lobby-id" type="text" readonly class="bg-black/50 px-4 py-2 rounded text-yellow-300 font-mono text-xl text-center border border-yellow-500/30" value="...">
+                    <button onclick="copyLobbyId()" class="bg-slate-700 px-4 py-2 rounded hover:bg-slate-600 text-white font-bold transition">COPIAR</button>
+                </div>
+                <div class="flex gap-3">
+                    <input id="join-input" type="text" placeholder="Pegar ID aquí..." class="bg-black/50 px-4 py-2 rounded font-mono border border-slate-600 text-white w-48">
+                    <button onclick="joinLobby()" id="btn-join" class="bg-green-700 px-6 py-2 rounded hover:bg-green-600 text-white font-bold border border-green-500 transition shadow-[0_0_10px_rgba(21,128,61,0.5)]">UNIRSE</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-4 gap-6 w-full">
+                <!-- Slots -->
+                <div id="slot-0" class="player-slot p-6 rounded-2xl flex flex-col items-center gap-3 opacity-50 transform transition hover:scale-105">
+                    <span class="text-red-400 font-black text-2xl tracking-widest">P1</span>
+                    <div class="char-preview w-24 h-24 bg-red-500 border-4 border-white shadow-lg rounded-lg"></div>
+                    <select id="sel-0" onchange="updateChar(0, this.value)" class="bg-slate-900 text-white p-2 rounded w-full border border-slate-600 outline-none" disabled>
+                        <option value="ruby">Ruby (Tank)</option>
+                        <option value="cobalt">Cobalt (Speed)</option>
+                        <option value="emerald">Emerald (Tech)</option>
+                        <option value="amethyst">Amethyst (Mage)</option>
+                    </select>
+                </div>
+                <div id="slot-1" class="player-slot p-6 rounded-2xl flex flex-col items-center gap-3 opacity-50 transform transition hover:scale-105">
+                    <span class="text-cyan-400 font-black text-2xl tracking-widest">P2</span>
+                    <div class="char-preview w-24 h-24 bg-cyan-500 border-4 border-white shadow-lg rounded-full"></div>
+                    <select id="sel-1" onchange="updateChar(1, this.value)" class="bg-slate-900 text-white p-2 rounded w-full border border-slate-600 outline-none" disabled>
+                        <option value="ruby">Ruby</option>
+                        <option value="cobalt" selected>Cobalt</option>
+                        <option value="emerald">Emerald</option>
+                        <option value="amethyst">Amethyst</option>
+                    </select>
+                </div>
+                <div id="slot-2" class="player-slot p-6 rounded-2xl flex flex-col items-center gap-3 opacity-50 transform transition hover:scale-105">
+                    <span class="text-green-400 font-black text-2xl tracking-widest">P3</span>
+                    <div class="char-preview w-24 h-24 bg-green-500 border-4 border-white shadow-lg rounded-lg transform skew-x-6"></div>
+                    <select id="sel-2" onchange="updateChar(2, this.value)" class="bg-slate-900 text-white p-2 rounded w-full border border-slate-600 outline-none" disabled>
+                        <option value="ruby">Ruby</option>
+                        <option value="cobalt">Cobalt</option>
+                        <option value="emerald" selected>Emerald</option>
+                        <option value="amethyst">Amethyst</option>
+                    </select>
+                </div>
+                <div id="slot-3" class="player-slot p-6 rounded-2xl flex flex-col items-center gap-3 opacity-50 transform transition hover:scale-105">
+                    <span class="text-purple-400 font-black text-2xl tracking-widest">P4</span>
+                    <div class="char-preview w-24 h-24 bg-purple-500 border-4 border-white shadow-lg rounded-lg transform rotate-6"></div>
+                    <select id="sel-3" onchange="updateChar(3, this.value)" class="bg-slate-900 text-white p-2 rounded w-full border border-slate-600 outline-none" disabled>
+                        <option value="ruby">Ruby</option>
+                        <option value="cobalt">Cobalt</option>
+                        <option value="emerald">Emerald</option>
+                        <option value="amethyst" selected>Amethyst</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="btn-start" onclick="startGame()" class="w-full py-5 bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-black text-3xl rounded-xl hover:scale-[1.02] active:scale-[0.98] transition shadow-[0_0_30px_rgba(234,179,8,0.4)] border-2 border-yellow-300 hidden mt-4">
+                ¡INICIAR COMBATE!
+            </button>
+            <div id="lobby-msg" class="text-slate-400 text-sm text-center mt-2 bg-black/40 px-4 py-1 rounded-full">
+                Mover: <b>WASD/Flechas</b> | Atacar: <b>ESPACIO</b> | Habilidad: <b>F</b> (P1) / <b>N</b> (P2) | Pausa: <b>ESC</b>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
     <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 100) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const flashOverlay = document.getElementById('flash-overlay');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const GRAVITY = 0.6;
+        const FRICTION = 0.82;
+        const AIR_RESISTANCE = 0.94;
+        const MOVE_SPEED = 1.5;
+        const JUMP_FORCE = -14;
+        const DOUBLE_JUMP_FORCE = -11;
+        const DEATH_Y = 1800; // Increased Map Size Limit
+        const DEATH_X = 1800;
+        const WIN_KILLS = 20;
+
+        let players = []; 
+        let platforms = [];
+        let particles = [];
+        let projectiles = [];
+        let decorations = []; // New Decorations Array
+        let gameRunning = false;
+        let isPaused = false;
+        let animationId;
+        
+        let peer = null;
+        let connections = {};
+        let hostConn = null;
+        let myId = null;
+        let isHost = false;
+        let isOnline = false;
+
+        // ICE servers configuration for NAT traversal (connecting across different networks)
+        const ICE_SERVERS = {
+            config: {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' },
+                    { urls: 'stun:stun.relay.metered.ca:80' },
+                    {
+                        urls: 'turn:global.relay.metered.ca:80',
+                        username: 'e8dd65b92f6932a5c648c661',
+                        credential: 'xJv1lk2Mxoz0ADWX'
+                    },
+                    {
+                        urls: 'turn:global.relay.metered.ca:80?transport=tcp',
+                        username: 'e8dd65b92f6932a5c648c661',
+                        credential: 'xJv1lk2Mxoz0ADWX'
+                    },
+                    {
+                        urls: 'turn:global.relay.metered.ca:443',
+                        username: 'e8dd65b92f6932a5c648c661',
+                        credential: 'xJv1lk2Mxoz0ADWX'
+                    }
+                ]
             }
-        });
+        };
+        
+        let lobbyState = {
+            players: [
+                { active: true, char: 'ruby', ready: true },
+                { active: false, char: 'cobalt', ready: false },
+                { active: false, char: 'emerald', ready: false },
+                { active: false, char: 'amethyst', ready: false }
+            ]
+        };
 
-        // Simple hero animations on load
-        gsap.from('.hero-label', {
-            duration: 0.6,
-            y: 20,
-            opacity: 0,
-            ease: 'power2.out'
-        });
+        let localKeys = { up: false, down: false, left: false, right: false, attack: false, skill: false };
+        let inputs = [{}, {}, {}, {}];
 
-        gsap.from('.hero h1', {
-            duration: 0.8,
-            y: 30,
-            opacity: 0,
-            delay: 0.1,
-            ease: 'power2.out'
-        });
+        // Timing control for consistent physics
+        let lastTime = 0;
+        let networkSendTimer = 0;
+        const NETWORK_SEND_INTERVAL = 50; // Send network updates every 50ms instead of every frame 
 
-        gsap.from('.hero p', {
-            duration: 0.8,
-            y: 20,
-            opacity: 0,
-            delay: 0.2,
-            ease: 'power2.out'
-        });
+        // --- SOUND MANAGER ---
+        const SoundManager = {
+            ctx: null,
+            enabled: true,
+            musicRunning: false,
+            stepCount: 0,
+            nextNoteTime: 0,
+            tempo: 120, // BPM
 
-        gsap.from('.cta-buttons', {
-            duration: 0.8,
-            y: 20,
-            opacity: 0,
-            delay: 0.3,
-            ease: 'power2.out'
-        });
+            init: function() {
+                if(!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                } else if(this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            
+            startMusic: function() {
+                if(this.musicRunning || !this.enabled) return;
+                this.init();
+                this.musicRunning = true;
+                this.nextNoteTime = this.ctx.currentTime + 0.1;
+                this.scheduler();
+            },
 
-        // Smooth scroll
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    window.scrollTo({
-                        top: target.offsetTop - 80,
-                        behavior: 'smooth'
+            stopMusic: function() {
+                this.musicRunning = false;
+            },
+
+            scheduler: function() {
+                if(!this.musicRunning || !this.enabled) return;
+                while(this.nextNoteTime < this.ctx.currentTime + 0.1) {
+                    this.playMusicStep(this.nextNoteTime);
+                    this.nextNoteTime += (60 / this.tempo) / 4; // 16th notes
+                }
+                requestAnimationFrame(() => this.scheduler());
+            },
+
+            playMusicStep: function(time) {
+                const step = this.stepCount % 16;
+                if(step % 4 === 0) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.frequency.setValueAtTime(150, time);
+                    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+                    gain.gain.setValueAtTime(0.15, time); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+                    osc.start(time); osc.stop(time + 0.5);
+                }
+                
+                if(step % 2 === 0) {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+                    osc.type = 'sawtooth';
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 600;
+                    osc.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    
+                    let freq = 65.41;
+                    const bar = Math.floor(this.stepCount / 16) % 4;
+                    if (bar === 2) freq = 77.78;
+                    if (bar === 3) freq = 87.31;
+                    osc.frequency.setValueAtTime(freq, time);
+                    gain.gain.setValueAtTime(0.06, time); 
+                    gain.gain.linearRampToValueAtTime(0, time + 0.15); 
+                    osc.start(time); osc.stop(time + 0.2);
+                }
+
+                if(step % 2 !== 0) {
+                    const bufferSize = this.ctx.sampleRate * 0.05;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter();
+                    filter.type = 'highpass'; filter.frequency.value = 5000;
+                    const gain = this.ctx.createGain();
+                    gain.gain.value = 0.02; 
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(time);
+                }
+                
+                if(step === 4 || step === 12) {
+                    const bufferSize = this.ctx.sampleRate * 0.1;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.08, time); 
+                    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                    noise.connect(gain); gain.connect(this.ctx.destination);
+                    noise.start(time);
+                }
+                this.stepCount++;
+            },
+
+            play: function(type) {
+                if(!this.enabled || !this.ctx) return;
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain); gain.connect(this.ctx.destination);
+
+                if(type === 'jump') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(150, t); osc.frequency.linearRampToValueAtTime(300, t+0.1);
+                    gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.1);
+                    osc.start(t); osc.stop(t+0.1);
+                } else if(type === 'shoot') {
+                    osc.type = 'square'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(100, t+0.1);
+                    gain.gain.setValueAtTime(0.03, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.1);
+                    osc.start(t); osc.stop(t+0.1);
+                } else if(type === 'hit') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.exponentialRampToValueAtTime(50, t+0.1);
+                    gain.gain.setValueAtTime(0.05, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.1);
+                    osc.start(t); osc.stop(t+0.1);
+                } else if(type === 'die') {
+                    const bufferSize = this.ctx.sampleRate * 0.5;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer; noise.connect(gain);
+                    gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t+0.5);
+                    noise.start(t);
+                } else if(type === 'attack') {
+                    const bufferSize = this.ctx.sampleRate * 0.2;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                    const noise = this.ctx.createBufferSource(); noise.buffer = buffer;
+                    const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(200, t); filter.frequency.linearRampToValueAtTime(1000, t+0.1);
+                    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+                    gain.gain.setValueAtTime(0.05, t); gain.gain.linearRampToValueAtTime(0, t+0.15);
+                    noise.start(t);
+                }
+            }
+        };
+
+        function toggleSound() {
+            SoundManager.enabled = !SoundManager.enabled;
+            document.getElementById('sound-btn').innerText = SoundManager.enabled ? "🔊" : "🔇";
+            if(SoundManager.enabled) SoundManager.startMusic();
+            else SoundManager.stopMusic();
+        }
+
+        const CHAR_STATS = {
+            ruby: { color: '#ef4444', speed: 1.0, damage: 1.2, weight: 1.2, name: 'RUBY', hpMax: 5 },
+            cobalt: { color: '#06b6d4', speed: 1.3, damage: 0.9, weight: 0.9, name: 'COBALT', hpMax: 5 },
+            emerald: { color: '#10b981', speed: 1.1, damage: 1.0, weight: 1.0, name: 'EMERALD', hpMax: 5 },
+            amethyst: { color: '#a855f7', speed: 1.1, damage: 1.1, weight: 0.8, name: 'AMETHYST', hpMax: 5 }
+        };
+
+        // --- NEW DECORATION CLASS ---
+        class Decoration {
+            constructor(x, y, type, size, color) {
+                this.x = x; this.y = y; this.type = type; this.size = size; this.color = color;
+                this.t = Math.random() * 100;
+                this.speed = Math.random() * 0.02 + 0.01;
+            }
+            draw(ctx) {
+                this.t += this.speed;
+                const floatY = Math.sin(this.t) * 15;
+                ctx.save();
+                ctx.translate(this.x, this.y + floatY);
+                ctx.fillStyle = this.color;
+                
+                if (this.type === 'crystal') {
+                    ctx.rotate(this.t * 0.3);
+                    ctx.globalAlpha = 0.6;
+                    ctx.beginPath();
+                    const r = this.size;
+                    // Diamond shape
+                    ctx.moveTo(0, -r*1.5); ctx.lineTo(r, 0); ctx.lineTo(0, r*1.5); ctx.lineTo(-r, 0);
+                    ctx.fill();
+                    // Inner Core
+                    ctx.globalAlpha = 0.9; ctx.fillStyle = 'white';
+                    ctx.beginPath(); ctx.arc(0,0, r/4, 0, Math.PI*2); ctx.fill();
+                    // Glow
+                    ctx.shadowColor = this.color; ctx.shadowBlur = 20;
+                    ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
+                } else if (this.type === 'pillar') {
+                    ctx.globalAlpha = 0.2;
+                    ctx.fillRect(-this.size/2, -600, this.size, 1200); // Massive pillar
+                    // Tech Lines
+                    ctx.fillStyle = 'white'; ctx.globalAlpha = 0.05;
+                    ctx.fillRect(-5, -600, 2, 1200); ctx.fillRect(5, -600, 2, 1200);
+                }
+                ctx.restore();
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, vx, vy, ownerId, type) {
+                this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+                this.ownerId = ownerId; this.type = type;
+                this.life = 100;
+                this.size = 10;
+                this.rotation = 0;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.rotation += 0.2;
+                this.life--;
+                if(this.type === 'hammer') this.vy += 0.3;
+            }
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                
+                if(this.type === 'hammer') {
+                    ctx.fillStyle = '#555'; ctx.fillRect(-4, -4, 8, 20); 
+                    ctx.fillStyle = '#991b1b'; ctx.fillRect(-8, -10, 16, 12); 
+                } else if(this.type === 'shuriken') {
+                    ctx.fillStyle = '#22d3ee'; ctx.beginPath();
+                    for(let i=0; i<4; i++) { ctx.rotate(Math.PI/2); ctx.moveTo(0,0); ctx.lineTo(5, 5); ctx.lineTo(15, 0); ctx.lineTo(5, -5); } ctx.fill();
+                } else if(this.type === 'disk') {
+                    ctx.strokeStyle = '#34d399'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(8,0); ctx.stroke();
+                } else if(this.type === 'orb') {
+                    ctx.fillStyle = '#d8b4fe'; ctx.beginPath(); ctx.arc(0,0,8 + Math.sin(this.life*0.5)*2, 0, Math.PI*2); ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        class Fighter {
+            constructor(id, type) {
+                this.id = id; this.type = type;
+                this.stats = CHAR_STATS[type];
+                this.x = 0; this.y = -200;
+                this.vx = 0; this.vy = 0;
+                this.width = 40; this.height = 60;
+                this.facingRight = id % 2 === 0;
+                
+                this.hp = 5; 
+                this.kills = 0;
+                this.lastHitBy = -1;
+
+                this.isGrounded = false;
+                this.jumps = 0;
+                this.isAttacking = false;
+                this.attackTimer = 0;
+                this.attackTotal = 30;
+                this.hitbox = { active: false, x:0, y:0, w:0, h:0 };
+                
+                this.skillCooldown = 0;
+
+                this.stun = 0;
+                this.floatT = Math.random() * 10;
+                this.walkCycle = 0; 
+                this.target = { x: this.x, y: this.y };
+            }
+
+            respawn() {
+                if (isHost && this.lastHitBy !== -1 && players[this.lastHitBy]) {
+                    players[this.lastHitBy].kills++;
+                }
+                SoundManager.play('die'); 
+                this.hp = 5; 
+                this.lastHitBy = -1;
+                const spawns = [{x: -200, y: -400}, {x: 200, y: -400}, {x: 0, y: -500}, {x: -300, y: -300}];
+                const s = spawns[this.id % 4];
+                this.x = s.x; this.y = s.y; this.vx = 0; this.vy = 0;
+                this.target.x = this.x; this.target.y = this.y;
+                createExplosion(this.x, this.y, this.stats.color, 30);
+                if(isHost && isOnline) updateHUD();
+            }
+
+            update(plats, allPlayers, input) {
+                this.floatT += 0.1;
+                this.walkCycle += Math.abs(this.vx) * 0.12; 
+
+                if(this.skillCooldown > 0) this.skillCooldown--;
+
+                if (this.stun > 0) {
+                    this.stun--;
+                    this.vy += GRAVITY; this.x += this.vx; this.y += this.vy;
+                    this.checkBounds();
+                    return;
+                }
+
+                const spd = MOVE_SPEED * this.stats.speed;
+                if (input.left) { this.vx -= spd; this.facingRight = false; }
+                if (input.right) { this.vx += spd; this.facingRight = true; }
+                
+                if (input.attack && !this.isAttacking) {
+                    this.isAttacking = true;
+                    this.attackTimer = this.attackTotal;
+                    SoundManager.play('attack'); 
+                }
+                
+                if (input.skill && this.skillCooldown <= 0) {
+                    this.shoot();
+                }
+
+                if (this.isAttacking) {
+                    this.attackTimer--;
+                    if (this.attackTimer < 25 && this.attackTimer > 10) {
+                        const range = (this.type === 'cobalt' || this.type === 'amethyst') ? 90 : 60;
+                        const hH = (this.type === 'ruby') ? 60 : 30;
+                        this.hitbox = {
+                            active: true,
+                            x: this.facingRight ? this.x + this.width : this.x - range,
+                            y: this.y + 10, w: range, h: hH
+                        };
+                    } else { this.hitbox.active = false; }
+                    if (this.attackTimer <= 0) this.isAttacking = false;
+                } else { this.hitbox.active = false; }
+
+                this.vy += GRAVITY;
+                this.vx *= this.isGrounded ? FRICTION : AIR_RESISTANCE;
+                if(Math.abs(this.vx) > 15) this.vx *= 0.9;
+                
+                this.x += this.vx; this.y += this.vy;
+
+                this.isGrounded = false;
+                for(let p of plats) {
+                    if (p.type === 'passable' && input.down) continue;
+                    if (this.vy >= 0 && this.y + this.height - this.vy <= p.y &&
+                        this.y + this.height >= p.y && this.x + this.width > p.x && 
+                        this.x < p.x + p.width) {
+                        this.y = p.y - this.height; this.vy = 0;
+                        this.isGrounded = true; this.jumps = 0;
+                    }
+                }
+
+                this.checkBounds();
+
+                if (this.hitbox.active) {
+                    allPlayers.forEach(enemy => {
+                        if (enemy.id !== this.id && checkOverlap(this.hitbox, enemy)) {
+                            this.dealDamage(enemy);
+                            this.hitbox.active = false; 
+                        }
                     });
                 }
+            }
+
+            shoot() {
+                this.skillCooldown = 180; 
+                SoundManager.play('shoot'); 
+                let px = this.x + this.width/2;
+                let py = this.y + this.height/2;
+                let dir = this.facingRight ? 1 : -1;
+                
+                if(this.type === 'ruby') {
+                    projectiles.push(new Projectile(px, py, dir * 8, -10, this.id, 'hammer'));
+                } else if(this.type === 'cobalt') {
+                    projectiles.push(new Projectile(px, py, dir * 15, 0, this.id, 'shuriken'));
+                } else if(this.type === 'emerald') {
+                    projectiles.push(new Projectile(px, py, dir * 10, 0, this.id, 'disk'));
+                } else if(this.type === 'amethyst') {
+                    projectiles.push(new Projectile(px, py, dir * 6, 0, this.id, 'orb'));
+                }
+            }
+
+            interpolate() {
+                // Smoother interpolation with clamped speed to prevent jittering
+                const lerpFactor = 0.2; // Slower interpolation for smoother movement
+                const dx = this.target.x - this.x;
+                const dy = this.target.y - this.y;
+
+                // Only interpolate if difference is significant
+                if (Math.abs(dx) > 0.5) this.x += dx * lerpFactor;
+                else this.x = this.target.x;
+
+                if (Math.abs(dy) > 0.5) this.y += dy * lerpFactor;
+                else this.y = this.target.y;
+
+                this.floatT += 0.1;
+                this.walkCycle += Math.abs(dx) * 0.08;
+            }
+
+            dealDamage(enemy) {
+                enemy.hp--; 
+                enemy.lastHitBy = this.id;
+                SoundManager.play('hit'); 
+                createExplosion(enemy.x+20, enemy.y+30, '#fff', 5);
+                shakeScreen();
+                let force = 15; 
+                enemy.vx = (this.facingRight ? 1 : -1) * force;
+                enemy.vy = -force * 0.5;
+                enemy.stun = 15;
+                if (enemy.hp <= 0) {
+                    createExplosion(enemy.x, enemy.y, enemy.stats.color, 40);
+                    enemy.respawn();
+                }
+            }
+
+            checkBounds() {
+                if (this.y > DEATH_Y || this.x < -DEATH_X || this.x > DEATH_X) {
+                    this.respawn();
+                    shakeScreen();
+                }
+            }
+
+            jump() {
+                if (this.jumps < 2) {
+                    this.vy = (this.jumps === 0) ? JUMP_FORCE : DOUBLE_JUMP_FORCE;
+                    this.jumps++;
+                    this.isGrounded = false;
+                    SoundManager.play('jump'); 
+                    createExplosion(this.x+20, this.y+60, '#aaa', 3);
+                }
+            }
+
+            draw(ctx) {
+                ctx.save();
+                const cx = this.x + this.width/2;
+                const cy = this.y + this.height/2;
+                ctx.translate(cx, cy);
+                ctx.rotate(this.vx * 0.05);
+                ctx.scale(this.facingRight ? 1 : -1, 1);
+
+                const color = this.stats.color;
+                
+                const isMoving = Math.abs(this.vx) > 0.1;
+                const walkSin = Math.sin(this.walkCycle);
+                const walkCos = Math.cos(this.walkCycle);
+                const runOffset = isMoving ? walkSin * 10 : 0;
+                const headBob = isMoving ? Math.abs(walkSin)*4 : Math.sin(this.floatT)*2;
+                const armSwing = isMoving ? walkCos * 10 : Math.sin(this.floatT)*2;
+
+                if (this.type === 'ruby') {
+                    drawRect(ctx, -15 - runOffset, 25, 12, 15, '#7f1d1d'); 
+                    drawRect(ctx, 5 + runOffset, 25, 12, 15, '#7f1d1d');
+                    ctx.save();
+                    ctx.translate(0, headBob);
+                        drawPoly(ctx, [{x:-20,y:-10}, {x:20,y:-10}, {x:15,y:25}, {x:-15,y:25}], '#991b1b');
+                        drawRect(ctx, -10, -5, 20, 15, color);
+                        drawRect(ctx, -28, -15, 12, 18, color); drawRect(ctx, 16, -15, 12, 18, color);
+                        drawRect(ctx, -14, -38, 28, 26, color);
+                        ctx.fillStyle = '#fca5a5'; ctx.fillRect(-10, -32, 20, 6); 
+                    ctx.restore();
+                    drawRect(ctx, -32 + armSwing, 10, 16, 16, color); 
+                    drawRect(ctx, 18 - armSwing, 12, 16, 16, color); 
+
+                } else if (this.type === 'cobalt') {
+                    ctx.save(); ctx.translate(runOffset, 0);
+                        drawPoly(ctx, [{x:-8, y:20}, {x:-16, y:35}, {x:-4, y:30}], '#1e3a8a');
+                    ctx.restore();
+                    ctx.save(); ctx.translate(-runOffset, 0);
+                        drawPoly(ctx, [{x:8, y:20}, {x:16, y:35}, {x:4, y:30}], '#1e3a8a');
+                    ctx.restore();
+                    const scarfY = -25 + headBob; const scarfX = -10;
+                    ctx.fillStyle = '#22d3ee'; ctx.beginPath(); ctx.moveTo(scarfX, scarfY);
+                    ctx.lineTo(scarfX - 40 - Math.abs(this.vx)*2, scarfY + Math.sin(this.walkCycle)*15); ctx.lineTo(scarfX - 35, scarfY + 10); ctx.fill();
+                    ctx.save();
+                    ctx.translate(0, headBob);
+                        drawPoly(ctx, [{x:-15, y:-10}, {x:15, y:-10}, {x:0, y:28}], '#1e40af');
+                        drawPoly(ctx, [{x:0, y:-45}, {x:16, y:-25}, {x:0, y:-5}, {x:-16, y:-25}], color);
+                        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.moveTo(4, -25); ctx.lineTo(12, -28); ctx.lineTo(12, -22); ctx.fill();
+                    ctx.restore();
+                    const handX = isMoving ? -15 : 15; 
+                    drawPoly(ctx, [{x:handX, y:12+headBob}, {x:handX+10, y:20+headBob}, {x:handX+13, y:10+headBob}], color);
+
+                } else if (this.type === 'emerald') {
+                    drawPoly(ctx, [{x:-15, y:25+walkSin*5}, {x:-5, y:25+walkSin*5}, {x:-10, y:35+walkSin*5}], color);
+                    drawPoly(ctx, [{x:5, y:35-walkSin*5}, {x:15, y:35-walkSin*5}, {x:10, y:25-walkSin*5}], color);
+                    ctx.save(); ctx.translate(0, headBob);
+                        drawPoly(ctx, [{x:-12, y:-10}, {x:12, y:-10}, {x:18, y:10}, {x:12, y:30}, {x:-12, y:30}, {x:-18, y:10}], '#065f46');
+                        drawCircle(ctx, 0, 10, 6, '#34d399'); drawCircle(ctx, 0, -30, 14, color);
+                        ctx.fillStyle = '#a7f3d0'; ctx.fillRect(-8, -32, 16, 4); 
+                    ctx.restore();
+                    const handOrbit = Math.sin(this.walkCycle * 0.5) * 8;
+                    drawCircle(ctx, 22 + handOrbit, 5, 9, color); drawCircle(ctx, -22 - handOrbit, 5, 7, color);
+
+                } else if (this.type === 'amethyst') {
+                    const hover = Math.sin(this.walkCycle*0.5) * 5;
+                    ctx.translate(0, hover);
+                    drawPoly(ctx, [{x:-15, y:10}, {x:15, y:10}, {x:25, y:40+runOffset}, {x:-25, y:40-runOffset}], '#581c87'); 
+                    drawPoly(ctx, [{x:-12, y:-15}, {x:12, y:-15}, {x:0, y:15}], color);
+                    drawPoly(ctx, [{x:-25, y:-20}, {x:-20, y:-30}, {x:-15, y:-20}, {x:-20, y:-10}], '#e9d5ff'); 
+                    drawPoly(ctx, [{x:15, y:-20}, {x:20, y:-30}, {x:25, y:-20}, {x:20, y:-10}], '#e9d5ff');
+                    drawPoly(ctx, [{x:0, y:-55}, {x:12, y:-35}, {x:0, y:-15}, {x:-12, y:-35}], color);
+                    drawCircle(ctx, 25+walkCos*5, 5, 6, '#d8b4fe'); drawCircle(ctx, -25-walkCos*5, 5, 6, '#d8b4fe');
+                }
+
+                if (this.isAttacking) {
+                    const progress = 1 - (this.attackTimer / this.attackTotal); 
+                    ctx.save();
+                    if (this.type === 'ruby') { 
+                        let swing = progress; if (progress < 0.3) swing = progress / 0.3 * 0.2; else swing = 0.2 + (progress - 0.3) / 0.7 * 0.8;
+                        const angle = -Math.PI * 0.8 + (Math.PI * 1.1) * Math.pow(swing, 3);
+                        ctx.translate(0, 10); ctx.rotate(angle);
+                        ctx.fillStyle = '#555'; ctx.fillRect(0, -4, 60, 8); ctx.fillStyle = '#333'; ctx.fillRect(45, -25, 30, 50); ctx.fillStyle = '#ef4444'; ctx.fillRect(75, -25, 5, 50);
+                    } else if (this.type === 'cobalt') { 
+                        let thrust = 0; if (progress < 0.2) thrust = -10 * (progress/0.2); else if (progress < 0.4) thrust = -10 + 60 * ((progress-0.2)/0.2); else thrust = 50 * (1 - (progress-0.4)/0.6);
+                        ctx.translate(10 + thrust, 15);
+                        ctx.fillStyle = '#555'; ctx.fillRect(-20, -2, 80, 4); drawPoly(ctx, [{x:60, y:-8}, {x:110, y:0}, {x:60, y:8}], '#22d3ee'); ctx.fillStyle='white'; ctx.fillRect(65, -1, 40, 2); 
+                    } else if (this.type === 'emerald') { 
+                        const armAngle = -Math.PI/2 + (progress * Math.PI * 1.5);
+                        ctx.translate(5, 5); ctx.rotate(armAngle); ctx.translate(40, 0); ctx.rotate(progress * Math.PI * 4);
+                        ctx.strokeStyle = '#34d399'; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.stroke(); ctx.fillStyle = '#fff'; 
+                        for(let i=0; i<4; i++) { ctx.rotate(Math.PI/2); ctx.beginPath(); ctx.moveTo(25, -5); ctx.lineTo(35, 0); ctx.lineTo(25, 5); ctx.fill(); }
+                    } else if (this.type === 'amethyst') { 
+                        const swing = Math.sin(progress * Math.PI / 2); const angle = Math.PI/2 - (swing * Math.PI * 1.2); 
+                        ctx.translate(5, 15); ctx.rotate(angle);
+                        ctx.fillStyle = '#555'; ctx.fillRect(0, -2, 70, 4); ctx.fillStyle = '#d8b4fe'; ctx.translate(70, 0); ctx.rotate(Math.PI / 1.5); 
+                        ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(10, -40, 50, -60, 60, -10); ctx.lineTo(0, -10); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+                ctx.restore();
+
+                if(this.skillCooldown > 0) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.fillRect(this.x, this.y + this.height + 15, this.width, 4);
+                    ctx.fillStyle = '#fbbf24'; const w = this.width * (1 - this.skillCooldown/180); ctx.fillRect(this.x, this.y + this.height + 15, w, 4);
+                }
+                ctx.fillStyle = 'white'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`P${this.id+1}`, this.x + this.width/2, this.y - 15);
+            }
+        }
+
+        class Platform {
+            constructor(x, y, w, h, type) {
+                this.x = x; this.y = y; this.width = w; this.height = h; this.type = type;
+                this.timer = Math.random() * 100;
+            }
+            draw(ctx) {
+                this.timer += 0.05; const glow = Math.sin(this.timer) * 0.5 + 0.5;
+                ctx.save();
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1; ctx.beginPath();
+                for(let i=0; i<this.width; i+=20) { ctx.moveTo(this.x+i, this.y); ctx.lineTo(this.x+i, this.y+this.height); }
+                ctx.stroke();
+                const edgeColor = this.type === 'solid' ? '#64748b' : '#38bdf8';
+                ctx.fillStyle = edgeColor; ctx.shadowColor = edgeColor; ctx.shadowBlur = 10 + glow * 10;
+                ctx.fillRect(this.x, this.y, this.width, 4);
+                ctx.shadowBlur = 0; ctx.fillStyle = '#334155';
+                if(this.type === 'passable') {
+                    ctx.beginPath(); ctx.moveTo(this.x+10, this.y+this.height); ctx.lineTo(this.x+20, this.y+this.height+10+glow*2); ctx.lineTo(this.x+30, this.y+this.height); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(this.x+this.width-30, this.y+this.height); ctx.lineTo(this.x+this.width-20, this.y+this.height+10+glow*2); ctx.lineTo(this.x+this.width-10, this.y+this.height); ctx.fill();
+                }
+                ctx.restore();
+            }
+        }
+
+        function drawRect(ctx, x, y, w, h, c) { ctx.fillStyle=c; ctx.fillRect(x,y,w,h); }
+        function drawCircle(ctx, x, y, r, c) { ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); }
+        function drawPoly(ctx, pts, c) { ctx.fillStyle=c; ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y); ctx.fill(); }
+        function checkOverlap(r1, r2) { return r1.x < r2.x + r2.width && r1.x + r1.w > r2.x && r1.y < r2.y + r2.height && r1.y + r1.h > r2.y; }
+        
+        function createExplosion(x, y, color, n) {
+            if(particles.length > 200) particles.splice(0, n); // Limit particles
+            for(let i=0; i<n; i++) {
+                particles.push({x, y, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10, life:1, color});
+            }
+        }
+        function shakeScreen() { document.body.classList.remove('shake-screen'); void document.body.offsetWidth; document.body.classList.add('shake-screen'); }
+
+        function togglePause() {
+            if(!gameRunning) return;
+            isPaused = !isPaused;
+            if(isPaused) {
+                document.getElementById('pause-menu').classList.remove('hidden');
+            } else {
+                document.getElementById('pause-menu').classList.add('hidden');
+                // Reset timing to prevent huge delta after unpause
+                lastTime = performance.now();
+            }
+        }
+        function returnToLobby() {
+            isPaused = false; gameRunning = false;
+            document.getElementById('pause-menu').classList.add('hidden');
+            document.getElementById('ui-layer').classList.add('hidden');
+            showLobbyUI();
+        }
+        function quitGame() { location.reload(); }
+
+        function setupLocal() {
+            SoundManager.startMusic(); // Start Music
+            isOnline = false; isHost = true;
+            lobbyState.players[0].active = true; lobbyState.players[1].active = true;
+            showLobbyUI();
+            document.getElementById('sel-0').disabled = false; document.getElementById('sel-1').disabled = false;
+            document.getElementById('btn-start').classList.remove('hidden');
+            document.getElementById('mode-menu').classList.add('hidden');
+        }
+        function setupOnline() {
+            SoundManager.startMusic(); // Start Music
+            isOnline = true; document.getElementById('mode-menu').classList.add('hidden'); showLobbyUI();
+            document.getElementById('lobby-msg').innerText = 'Conectando al servidor...';
+            peer = new Peer(ICE_SERVERS);
+            peer.on('open', id => {
+                document.getElementById('lobby-id').value = id;
+                document.getElementById('lobby-msg').innerText = 'Sala creada. Comparte el ID con tus amigos.';
+                isHost = true; myId = 0; updateLobbyUI();
+                document.getElementById('sel-0').disabled = false; document.getElementById('btn-start').classList.remove('hidden');
+                peer.on('connection', conn => handleConnection(conn));
             });
-        });
+            peer.on('error', err => {
+                console.error('PeerJS Error:', err);
+                document.getElementById('lobby-msg').innerText = '❌ Error de conexión: ' + err.type;
+            });
+        }
+        function joinLobby() {
+            SoundManager.startMusic(); // Start Music
+            const hostId = document.getElementById('join-input').value;
+            if(!hostId) {
+                alert('Por favor ingresa el ID de la sala');
+                return;
+            }
+            isOnline = true; isHost = false;
+            document.getElementById('btn-join').innerText = 'CONECTANDO...';
+            document.getElementById('btn-join').disabled = true;
 
-        // SVG Animations - Galaxian formation (smooth wave motion)
-        gsap.to('.galaxian-blue, .galaxian-purple, .galaxian-red', {
-            y: 8,
-            x: 5,
-            duration: 2,
-            repeat: -1,
-            yoyo: true,
-            ease: 'sine.inOut',
-            stagger: 0.1
-        });
+            peer = new Peer(ICE_SERVERS);
+            peer.on('open', id => {
+                hostConn = peer.connect(hostId, ICE_SERVERS);
 
-        // Galaxian flagship (diving motion)
-        gsap.to('.galaxian-flagship', {
-            y: 15,
-            duration: 1.5,
-            repeat: -1,
-            yoyo: true,
-            ease: 'power2.inOut'
-        });
+                // Timeout for connection attempt
+                const connectionTimeout = setTimeout(() => {
+                    if (!hostConn.open) {
+                        document.getElementById('btn-join').innerText = 'UNIRSE';
+                        document.getElementById('btn-join').disabled = false;
+                        alert('No se pudo conectar. Verifica el ID de la sala o intenta de nuevo.');
+                    }
+                }, 15000);
 
-        // Battle City enemy tanks
-        gsap.to('.enemy-tank', {
-            x: 5,
-            duration: 1,
-            repeat: -1,
-            yoyo: true,
-            ease: 'power1.inOut'
-        });
+                hostConn.on('open', () => {
+                    clearTimeout(connectionTimeout);
+                    document.getElementById('mode-menu').classList.add('hidden');
+                    showLobbyUI();
+                    document.getElementById('lobby-msg').innerText = '✓ Conectado al host';
+                });
+                hostConn.on('data', data => handleClientData(data));
+                hostConn.on('error', err => {
+                    clearTimeout(connectionTimeout);
+                    console.error('Connection error:', err);
+                    document.getElementById('btn-join').innerText = 'UNIRSE';
+                    document.getElementById('btn-join').disabled = false;
+                    alert('Error de conexión: ' + err.type);
+                });
+                hostConn.on('close', () => {
+                    if (gameRunning) {
+                        alert('Conexión perdida con el host');
+                        location.reload();
+                    }
+                });
+            });
+            peer.on('error', err => {
+                console.error('PeerJS Error:', err);
+                document.getElementById('btn-join').innerText = 'UNIRSE';
+                document.getElementById('btn-join').disabled = false;
+                alert('Error: ' + err.type + '. Intenta de nuevo.');
+            });
+        }
+        function showLobbyUI() {
+            document.getElementById('lobby-menu').classList.remove('hidden');
+            document.getElementById('lobby-menu').style.display = 'flex';
+            document.getElementById('start-screen').style.display = 'flex';
+            updateLobbyUI();
+        }
+
+        function handleConnection(conn) {
+            conn.on('open', () => {
+                let slot = -1; for(let i=1; i<4; i++) { if (!lobbyState.players[i].active) { slot = i; break; } }
+                if (slot !== -1) {
+                    lobbyState.players[slot].active = true; connections[conn.peer] = { conn: conn, slot: slot };
+                    conn.send({ type: 'welcome', slot: slot, state: lobbyState }); broadcastLobby();
+                } else { conn.send({ type: 'full' }); conn.close(); }
+            });
+            conn.on('data', data => {
+                if (data.type === 'charSelect') { if(connections[conn.peer]) { lobbyState.players[connections[conn.peer].slot].char = data.char; broadcastLobby(); } }
+                if (data.type === 'input') { if(connections[conn.peer]) inputs[connections[conn.peer].slot] = data.input; }
+            });
+            conn.on('close', () => { if(connections[conn.peer]) { lobbyState.players[connections[conn.peer].slot].active = false; delete connections[conn.peer]; broadcastLobby(); } });
+        }
+        function handleClientData(data) {
+            if (data.type === 'welcome') { myId = data.slot; lobbyState = data.state; updateLobbyUI(); document.getElementById(`sel-${myId}`).disabled = false; }
+            if (data.type === 'lobbyUpdate') { lobbyState = data.state; updateLobbyUI(); }
+            if (data.type === 'start') { startGameClient(data.config); }
+            if (data.type === 'gameState') {
+                data.players.forEach((pState, i) => {
+                    if (players[i] && pState) {
+                        // Set target for interpolation - don't directly set position
+                        players[i].target.x = pState.x;
+                        players[i].target.y = pState.y;
+                        // Only update velocity if significantly different to prevent jitter
+                        if (Math.abs(players[i].vx - pState.vx) > 0.5) players[i].vx = pState.vx;
+                        if (Math.abs(players[i].vy - pState.vy) > 0.5) players[i].vy = pState.vy;
+                        players[i].kills = pState.kills;
+                        players[i].facingRight = pState.dir;
+                        if (pState.att && !players[i].isAttacking) {
+                            players[i].isAttacking = true;
+                            players[i].attackTimer = players[i].attackTotal;
+                        }
+                    }
+                });
+                // Only update projectiles if count changed significantly to prevent flicker
+                if (Math.abs(projectiles.length - data.projectiles.length) > 0 || projectiles.length === 0) {
+                    projectiles = data.projectiles.map(p => new Projectile(p.x, p.y, p.vx, p.vy, p.ownerId, p.type));
+                }
+                updateHUD();
+            }
+        }
+        function broadcastLobby() { updateLobbyUI(); Object.values(connections).forEach(c => c.conn.send({ type: 'lobbyUpdate', state: lobbyState })); }
+        function updateChar(slot, char) { if (isHost) { lobbyState.players[slot].char = char; if(isOnline) broadcastLobby(); else updateLobbyUI(); } else { hostConn.send({ type: 'charSelect', char: char }); } }
+        function updateLobbyUI() {
+            for(let i=0; i<4; i++) {
+                const p = lobbyState.players[i]; const slotEl = document.getElementById(`slot-${i}`); const selEl = document.getElementById(`sel-${i}`);
+                if (p.active) { slotEl.classList.add('active'); slotEl.style.opacity = 1; selEl.value = p.char; slotEl.querySelector('.char-preview').style.backgroundColor = CHAR_STATS[p.char].color; }
+                else { slotEl.classList.remove('active'); slotEl.style.opacity = 0.5; selEl.value = 'cobalt'; slotEl.querySelector('.char-preview').style.backgroundColor = '#333'; }
+            }
+        }
+        function copyLobbyId() { document.getElementById('lobby-id').select(); document.execCommand('copy'); }
+
+        function startGame() {
+            if (!isHost) return;
+            let config = []; for(let i=0; i<4; i++) { if (lobbyState.players[i].active) config.push({ id: i, type: lobbyState.players[i].char }); }
+            if(isOnline) Object.values(connections).forEach(c => c.conn.send({ type: 'start', config: config }));
+            initGameWorld(config);
+        }
+        function startGameClient(config) { initGameWorld(config); }
+        function initGameWorld(config) {
+            document.getElementById('start-screen').style.display = 'none'; document.getElementById('ui-layer').style.display = 'flex'; document.getElementById('ui-layer').classList.remove('hidden');
+            config.forEach(c => document.getElementById(`hud-p${c.id+1}`).style.opacity = 1);
+            players = []; for(let i=0; i<4; i++) players[i] = null;
+            config.forEach(c => { players[c.id] = new Fighter(c.id, c.type); });
+            // MAPA EXPANDIDO (20% Aprox)
+            platforms = [
+                new Platform(-480, 240, 960, 40, 'solid'),
+                new Platform(-720, 60, 240, 20, 'passable'), new Platform(480, 60, 240, 20, 'passable'),
+                new Platform(-180, -120, 360, 20, 'passable'),
+                new Platform(-600, -300, 180, 20, 'passable'), new Platform(420, -300, 180, 20, 'passable')
+            ];
+            // DECORACIONES
+            decorations = [
+                new Decoration(-300, 0, 'pillar', 60, '#1e293b'), new Decoration(300, 0, 'pillar', 60, '#1e293b'),
+                new Decoration(0, -200, 'pillar', 100, '#0f172a'),
+                new Decoration(-800, 0, 'crystal', 30, '#ec4899'), new Decoration(800, 0, 'crystal', 30, '#22d3ee'),
+                new Decoration(0, -450, 'crystal', 40, '#facc15'), new Decoration(-500, 350, 'crystal', 20, '#10b981'),
+                new Decoration(500, 350, 'crystal', 20, '#a855f7')
+            ];
+            projectiles = [];
+            // Cancel any existing animation loop before starting new one
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            lastTime = performance.now();
+            networkSendTimer = 0;
+            gameRunning = true; isPaused = false; animate();
+        }
+
+        let bgRot = 0;
+        function drawBackground(ctx) {
+            bgRot += 0.002; ctx.save();
+            const grd = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 100, canvas.width/2, canvas.height/2, 1000);
+            grd.addColorStop(0, '#1e293b'); grd.addColorStop(1, '#020617');
+            ctx.fillStyle = grd; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.translate(canvas.width/2, canvas.height/2); ctx.rotate(bgRot);
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)'; ctx.lineWidth = 2;
+            const size = 1500; const step = 150;
+            for(let i=-size; i<=size; i+=step) { ctx.beginPath(); ctx.moveTo(i, -size); ctx.lineTo(i, size); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-size, i); ctx.lineTo(size, i); ctx.stroke(); }
+            ctx.rotate(-bgRot * 2); ctx.strokeStyle = 'rgba(236, 72, 153, 0.05)'; ctx.lineWidth = 5;
+            for(let i=0; i<3; i++) { ctx.beginPath(); const r = 300 + i*200; for(let j=0; j<6; j++) { const a = (Math.PI*2/6) * j; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } ctx.closePath(); ctx.stroke(); }
+            ctx.restore();
+        }
+
+        function animate(currentTime) {
+            if(!gameRunning) return;
+            if(isPaused && !isOnline) { animationId = requestAnimationFrame(animate); return; }
+
+            // Calculate delta time for consistent physics regardless of frame rate
+            if (!currentTime) currentTime = performance.now();
+            const rawDelta = currentTime - lastTime;
+            const deltaTime = Math.min(rawDelta / 16.67, 3); // Normalize to ~60fps, cap at 3x to prevent huge jumps
+            lastTime = currentTime;
+            networkSendTimer += rawDelta;
+
+            ctx.clearRect(0,0, canvas.width, canvas.height);
+            drawBackground(ctx);
+
+            let tx=0, ty=0, c=0; let minX=10000, maxX=-10000, minY=10000, maxY=-10000;
+            players.forEach(p => { if(p) { tx += p.x; ty += p.y; c++; if(p.x < minX) minX = p.x; if(p.x > maxX) maxX = p.x; if(p.y < minY) minY = p.y; if(p.y > maxY) maxY = p.y; } });
+            if (c > 0) {
+                tx /= c; ty /= c; let w = (maxX - minX) + 500; let h = (maxY - minY) + 400;
+                let z = Math.min(canvas.width/w, canvas.height/h); z = Math.min(Math.max(z, 0.4), 1.0);
+                ctx.save(); ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(z, z); ctx.translate(-tx, -ty);
+            }
+
+            decorations.forEach(d => d.draw(ctx)); // Draw Decorations
+            platforms.forEach(p => p.draw(ctx));
+
+            // Projectiles
+            if(!isPaused || isOnline) {
+                projectiles.forEach((p, i) => {
+                    p.update();
+                    // Collision with players
+                    if(isHost) {
+                        players.forEach(pl => {
+                            if(pl && pl.id !== p.ownerId && checkOverlap({x:p.x-5, y:p.y-5, w:10, h:10}, pl)) {
+                                pl.dealDamage(players[p.ownerId]);
+                                p.life = 0; // Destroy
+                            }
+                        });
+                    }
+                    if(p.life <= 0) projectiles.splice(i, 1);
+                });
+            }
+            projectiles.forEach(p => p.draw(ctx));
+
+            if (!isPaused || isOnline) {
+                if (isHost) {
+                    for(let i=0; i<4; i++) {
+                        if(players[i]) {
+                            let inp = localKeys; 
+                            if (isOnline && i !== myId) inp = inputs[i]; 
+                            else if (!isOnline && i === 1) inp = inputs[1]; 
+                            if (isPaused && i === myId && isOnline) inp = { up:false, down:false, left:false, right:false, attack:false };
+                            players[i].update(platforms, players.filter(p=>p!==null), inp);
+                        }
+                    }
+                    if (isOnline) {
+                        // Only send network updates at fixed interval to prevent overwhelming clients
+                        if (networkSendTimer >= NETWORK_SEND_INTERVAL) {
+                            networkSendTimer = 0;
+                            const pState = players.map(p => { if(!p) return null; return { x:Math.round(p.x), y:Math.round(p.y), vx:p.vx, vy:p.vy, kills:p.kills, dir:p.facingRight, att: p.isAttacking && p.attackTimer > 15 }; });
+                            const projState = projectiles.map(p => ({x:p.x, y:p.y, vx:p.vx, vy:p.vy, ownerId:p.ownerId, type:p.type}));
+                            Object.values(connections).forEach(c => c.conn.send({ type: 'gameState', players: pState, projectiles: projState }));
+                        }
+                        updateHUD();
+                    } else { updateHUD(); }
+                } else {
+                    // Client: send input at fixed interval and interpolate positions
+                    if(isOnline && hostConn) {
+                        if (networkSendTimer >= NETWORK_SEND_INTERVAL) {
+                            networkSendTimer = 0;
+                            hostConn.send({ type: 'input', input: localKeys });
+                        }
+                    }
+                    players.forEach(p => { if(p) p.interpolate(); });
+                }
+            }
+
+            players.forEach(p => { if(p) p.draw(ctx); });
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.05; ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 6, 6);
+                if(p.life <= 0) particles.splice(i,1);
+            });
+            ctx.globalAlpha = 1;
+
+            if(c > 0) ctx.restore();
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function updateHUD() {
+            players.forEach(p => {
+                if(!p) return;
+                const root = document.getElementById(`hud-p${p.id+1}`);
+                root.querySelector(`.p${p.id+1}-kills`).innerText = p.kills;
+                // No % display
+                if (p.kills >= WIN_KILLS && gameRunning) {
+                    document.getElementById('game-message').innerText = `¡${p.stats.name} GANA!`;
+                    document.getElementById('game-message').classList.remove('hidden');
+                    gameRunning = false; setTimeout(() => location.reload(), 4000);
+                }
+            });
+        }
+
+        window.addEventListener('keydown', e => handleInput(e, true));
+        window.addEventListener('keyup', e => handleInput(e, false));
+
+        function handleInput(e, isDown) {
+            const k = e.key.toLowerCase();
+            if(isDown && k === 'escape') { togglePause(); return; }
+
+            if (['w','arrowup'].includes(k)) {
+                if (isDown && players[myId] && !isPaused) { if(isHost) players[myId].jump(); else if(localKeys.up === false) localKeys.up = true; }
+                if (!isDown) localKeys.up = false;
+            }
+            if (['s','arrowdown'].includes(k)) localKeys.down = isDown;
+            if (['a','arrowleft'].includes(k)) localKeys.left = isDown;
+            if (['d','arrowright'].includes(k)) localKeys.right = isDown;
+            if ([' ', 'spacebar'].includes(k)) localKeys.attack = isDown;
+            if (['f'].includes(k)) localKeys.skill = isDown;
+
+            if (!isOnline && isHost) {
+                if (!inputs[1]) inputs[1] = { up:false, down:false, left:false, right:false, attack:false };
+                if (k === 'arrowup') { if(isDown && players[1]) players[1].jump(); }
+                if (k === 'arrowdown') inputs[1].down = isDown;
+                if (k === 'arrowleft') inputs[1].left = isDown;
+                if (k === 'arrowright') inputs[1].right = isDown;
+                if (['enter', 'm'].includes(k)) inputs[1].attack = isDown;
+                if (['n'].includes(k)) inputs[1].skill = isDown;
+            }
+        }
     </script>
 </body>
 </html>
