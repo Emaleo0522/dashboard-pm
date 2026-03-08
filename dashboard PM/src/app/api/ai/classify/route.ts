@@ -52,7 +52,7 @@ Los tags deben ser 1-3 palabras en español, relevantes al dominio del producto.
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 256,
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -67,11 +67,19 @@ Los tags deben ser 1-3 palabras en español, relevantes al dominio del producto.
     }
 
     const data = await res.json()
-    const text = data.content?.[0]?.text || ''
+    const rawText: string = data.content?.[0]?.text || ''
+
+    // Strip markdown code blocks if model wrapped the JSON
+    let jsonText = rawText.trim()
+    jsonText = jsonText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
+
+    // Extract JSON object in case there's surrounding text
+    const match = jsonText.match(/\{[\s\S]*\}/)
+    if (match) jsonText = match[0]
 
     let parsed: ClassifyResult
     try {
-      parsed = JSON.parse(text)
+      parsed = JSON.parse(jsonText)
     } catch {
       return NextResponse.json({ ok: false, error: 'Respuesta de IA inválida' }, { status: 500 })
     }
