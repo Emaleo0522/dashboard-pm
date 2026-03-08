@@ -8,13 +8,18 @@ export async function POST(req: Request) {
   }
 
   const body: CreateIssueInput = await req.json()
+  const teamId = body.teamId || process.env.LINEAR_TEAM_ID || ''
+  if (!teamId) {
+    return NextResponse.json({ ok: false, error: 'LINEAR_TEAM_ID no configurado' }, { status: 400 })
+  }
+
   try {
     const { getLinearClient } = await import('@/lib/linear-client')
     const client = getLinearClient()
     const result = await client.createIssue({
       title: body.title,
       description: body.description,
-      teamId: body.teamId,
+      teamId,
       priority: body.priority,
     })
     const issue = await result.issue

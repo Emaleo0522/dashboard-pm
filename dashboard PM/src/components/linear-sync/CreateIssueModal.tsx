@@ -25,11 +25,10 @@ export function CreateIssueModal({ open, onClose }: CreateIssueModalProps) {
     setLoading(true)
     setError('')
     try {
-      const teamId = process.env.NEXT_PUBLIC_LINEAR_TEAM_ID || ''
       const res = await fetch('/api/linear/create-issue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, teamId, priority: 3 }),
+        body: JSON.stringify({ title, description, priority: 3 }),
       })
       const data = await res.json()
       if (data.ok) {

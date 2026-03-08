@@ -31,5 +31,5 @@ export interface CreateIssueInput {
   title: string
   description?: string
   priority?: IssuePriority
-  teamId: string
+  teamId?: string // optional: server uses LINEAR_TEAM_ID env var as fallback
 }
