@@ -6,7 +6,11 @@ export async function GET() {
   const teamId = process.env.LINEAR_TEAM_ID
 
   if (!apiKey || !teamId) {
-    return NextResponse.json({ issues: mockLinearIssues, mock: true })
+    // Filter mock: only show active issues (not completed/cancelled)
+    const activeIssues = mockLinearIssues.filter(
+      (issue) => issue.state.type !== 'completed' && issue.state.type !== 'cancelled'
+    )
+    return NextResponse.json({ issues: activeIssues, mock: true })
   }
 
   try {
@@ -15,6 +19,9 @@ export async function GET() {
     return NextResponse.json({ issues, mock: false })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (e: any) {
-    return NextResponse.json({ issues: mockLinearIssues, mock: true, error: e.message })
+    const activeIssues = mockLinearIssues.filter(
+      (issue) => issue.state.type !== 'completed' && issue.state.type !== 'cancelled'
+    )
+    return NextResponse.json({ issues: activeIssues, mock: true, error: e.message })
   }
 }

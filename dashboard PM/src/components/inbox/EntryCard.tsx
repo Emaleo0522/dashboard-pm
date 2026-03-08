@@ -1,8 +1,10 @@
 'use client'
 import { useState } from 'react'
-import { MoreHorizontal, Zap, Archive, Trash2, CheckCircle2 } from 'lucide-react'
+import { MoreHorizontal, Zap, Archive, Trash2, CheckCircle2, Layers, Lightbulb } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { useInboxStore } from '@/store/useInboxStore'
+import { useBacklogStore } from '@/store/useBacklogStore'
+import { useBrainstormStore } from '@/store/useBrainstormStore'
 import { formatDate } from '@/lib/utils'
 import type { InboxEntry } from '@/types/inbox'
 import { motion } from 'framer-motion'
@@ -13,7 +15,57 @@ interface EntryCardProps {
 
 export function EntryCard({ entry }: EntryCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [sentTo, setSentTo] = useState<string | null>(null)
+  const [linearLoading, setLinearLoading] = useState(false)
+  const [linearError, setLinearError] = useState<string | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
   const { updateStatus, deleteEntry } = useInboxStore()
+  const addBacklogCard = useBacklogStore((s) => s.addCard)
+  const addBrainstormNote = useBrainstormStore((s) => s.addNote)
+
+  const handleSendToBacklog = () => {
+    addBacklogCard({
+      title: entry.content,
+      columnId: 'raw',
+      tags: entry.tags,
+    })
+    updateStatus(entry.id, 'archived')
+    setMenuOpen(false)
+    setSentTo('Backlog')
+    setTimeout(() => setSentTo(null), 2000)
+  }
+
+  const handleSendToBrainstorm = () => {
+    addBrainstormNote(entry.content, 'indigo')
+    updateStatus(entry.id, 'archived')
+    setMenuOpen(false)
+    setSentTo('Brainstorm')
+    setTimeout(() => setSentTo(null), 2000)
+  }
+
+  const handleConvertToIssue = async () => {
+    setLinearLoading(true)
+    setLinearError(null)
+    setMenuOpen(false)
+    try {
+      const res = await fetch('/api/linear/create-issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: entry.content }),
+      })
+      const data = await res.json() as { ok: boolean; error?: string }
+      updateStatus(entry.id, 'converted')
+      if (!data.ok) {
+        setLinearError('Creado localmente. Linear: ' + (data.error ?? 'sin API key'))
+      }
+    } catch {
+      updateStatus(entry.id, 'converted')
+      setLinearError('Creado localmente. No se pudo conectar a Linear.')
+    } finally {
+      setLinearLoading(false)
+    }
+  }
 
   return (
     <motion.div
@@ -36,6 +88,15 @@ export function EntryCard({ entry }: EntryCardProps) {
           {entry.convertedIssueId && (
             <p className="text-xs text-accent mt-1.5 font-mono">{entry.convertedIssueId}</p>
           )}
+          {sentTo && (
+            <span className="text-xs text-green-400 mt-1.5 block">Enviado a {sentTo}</span>
+          )}
+          {linearError && (
+            <span className="text-xs text-yellow-400 mt-1.5 block">{linearError}</span>
+          )}
+          {linearLoading && (
+            <span className="text-xs text-text-muted mt-1.5 block">Creando issue...</span>
+          )}
         </div>
 
         {/* Acciones */}
@@ -55,13 +116,33 @@ export function EntryCard({ entry }: EntryCardProps) {
                 <MenuItem icon={<CheckCircle2 size={13} />} label="Marcar clasificada" onClick={() => { updateStatus(entry.id, 'classified'); setMenuOpen(false) }} />
               )}
               {entry.status !== 'converted' && (
-                <MenuItem icon={<Zap size={13} />} label="Convertir a issue" onClick={() => { updateStatus(entry.id, 'converted'); setMenuOpen(false) }} />
+                <MenuItem icon={<Zap size={13} />} label="Convertir a issue" onClick={handleConvertToIssue} />
               )}
+              <MenuItem icon={<Layers size={13} />} label="→ Backlog" onClick={handleSendToBacklog} />
+              <MenuItem icon={<Lightbulb size={13} />} label="→ Brainstorm" onClick={handleSendToBrainstorm} />
               {entry.status !== 'archived' && (
                 <MenuItem icon={<Archive size={13} />} label="Archivar" onClick={() => { updateStatus(entry.id, 'archived'); setMenuOpen(false) }} />
               )}
               <div className="border-t border-border my-1" />
-              <MenuItem icon={<Trash2 size={13} />} label="Eliminar" danger onClick={() => { deleteEntry(entry.id); setMenuOpen(false) }} />
+              {confirmDelete ? (
+                <div className="flex items-center gap-2 px-3 py-1.5">
+                  <span className="text-xs text-red-400">¿Borrar?</span>
+                  <button
+                    onClick={() => { deleteEntry(entry.id); setMenuOpen(false) }}
+                    className="text-xs text-red-400 hover:text-red-300 border border-red-400/30 px-1.5 py-0.5 rounded"
+                  >
+                    Sí
+                  </button>
+                  <button
+                    onClick={() => setConfirmDelete(false)}
+                    className="text-xs text-text-muted"
+                  >
+                    No
+                  </button>
+                </div>
+              ) : (
+                <MenuItem icon={<Trash2 size={13} />} label="Eliminar" danger onClick={() => setConfirmDelete(true)} />
+              )}
             </div>
           )}
         </div>
