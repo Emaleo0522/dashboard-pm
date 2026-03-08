@@ -31,7 +31,7 @@ export function VoiceButton({ onTranscript }: VoiceButtonProps) {
 
     const SpeechRecognitionAPI =
       typeof window !== 'undefined' &&
-      (window.SpeechRecognition || window.webkitSpeechRecognition)
+      ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
 
     if (!SpeechRecognitionAPI) {
       setError('Tu navegador no soporta voz. Usá Chrome o Edge.')
