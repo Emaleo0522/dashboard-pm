@@ -3,9 +3,17 @@ import { persist } from 'zustand/middleware'
 import type { BacklogCard, KanbanColumnId } from '@/types/backlog'
 import { mockBacklogCards } from '@/data/mock'
 
+interface AddCardData {
+  title: string
+  columnId: KanbanColumnId
+  description?: string
+  tags?: string[]
+  priority?: 'urgent' | 'high' | 'medium' | 'low'
+}
+
 interface BacklogState {
   cards: BacklogCard[]
-  addCard: (title: string, columnId: KanbanColumnId) => void
+  addCard: (data: AddCardData) => void
   updateCard: (id: string, updates: Partial<BacklogCard>) => void
   moveCard: (id: string, columnId: KanbanColumnId) => void
   deleteCard: (id: string) => void
@@ -15,14 +23,17 @@ export const useBacklogStore = create<BacklogState>()(
   persist(
     (set) => ({
       cards: mockBacklogCards,
-      addCard: (title, columnId) =>
+      addCard: (data) =>
         set((s) => ({
           cards: [
             ...s.cards,
             {
               id: crypto.randomUUID(),
-              title,
-              columnId,
+              title: data.title,
+              columnId: data.columnId,
+              description: data.description,
+              tags: data.tags,
+              priority: data.priority,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },

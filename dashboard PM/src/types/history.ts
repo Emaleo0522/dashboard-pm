@@ -21,3 +21,12 @@ export interface Meeting {
   actions: MeetingAction[]
   tags: string[]
 }
+
+export interface CalendarMeeting {
+  uid: string
+  title: string
+  date: string
+  endDate?: string
+  attendees: string[]
+  location?: string
+}

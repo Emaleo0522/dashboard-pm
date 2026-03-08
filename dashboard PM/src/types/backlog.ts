@@ -7,6 +7,7 @@ export interface BacklogCard {
   columnId: KanbanColumnId
   priority?: 'urgent' | 'high' | 'medium' | 'low'
   tags?: string[]
+  linearIssueId?: string
   createdAt: string
   updatedAt: string
 }
