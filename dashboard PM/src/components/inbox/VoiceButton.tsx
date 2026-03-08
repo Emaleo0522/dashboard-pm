@@ -31,6 +31,7 @@ export function VoiceButton({ onTranscript }: VoiceButtonProps) {
 
     const SpeechRecognitionAPI =
       typeof window !== 'undefined' &&
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)
 
     if (!SpeechRecognitionAPI) {
