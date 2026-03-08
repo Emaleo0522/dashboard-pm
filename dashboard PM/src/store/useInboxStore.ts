@@ -6,6 +6,7 @@ import { mockInboxEntries } from '@/data/mock'
 interface InboxState {
   entries: InboxEntry[]
   addEntry: (content: string) => void
+  addClassifiedEntry: (content: string, classifiedAs: NonNullable<InboxEntry['classifiedAs']>, tags: string[]) => void
   updateStatus: (id: string, status: EntryStatus) => void
   deleteEntry: (id: string) => void
 }
@@ -21,6 +22,20 @@ export const useInboxStore = create<InboxState>()(
               id: crypto.randomUUID(),
               content,
               status: 'unprocessed',
+              createdAt: new Date().toISOString(),
+            },
+            ...s.entries,
+          ],
+        })),
+      addClassifiedEntry: (content, classifiedAs, tags) =>
+        set((s) => ({
+          entries: [
+            {
+              id: crypto.randomUUID(),
+              content,
+              status: 'classified',
+              classifiedAs,
+              tags,
               createdAt: new Date().toISOString(),
             },
             ...s.entries,

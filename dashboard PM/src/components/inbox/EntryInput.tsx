@@ -5,27 +5,51 @@ import { Button } from '@/components/ui/Button'
 import { VoiceButton } from './VoiceButton'
 import { useInboxStore } from '@/store/useInboxStore'
 import { cn } from '@/lib/utils'
+import type { InboxEntry } from '@/types/inbox'
 
 export function EntryInput() {
   const [value, setValue] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
   const addEntry = useInboxStore((s) => s.addEntry)
+  const addClassifiedEntry = useInboxStore((s) => s.addClassifiedEntry)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const handleSubmit = () => {
     if (!value.trim()) return
     addEntry(value.trim())
     setValue('')
+    setAiError(null)
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
   }
 
   const handleProcessAI = async () => {
     if (!value.trim()) return
     setProcessing(true)
-    await new Promise((r) => setTimeout(r, 1200)) // simula delay IA
-    addEntry(value.trim())
-    setValue('')
-    setProcessing(false)
+    setAiError(null)
+    try {
+      const res = await fetch('/api/ai/classify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: value.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) {
+        setAiError(data.error || 'Error al procesar con IA')
+        return
+      }
+      addClassifiedEntry(
+        value.trim(),
+        data.classifiedAs as NonNullable<InboxEntry['classifiedAs']>,
+        data.tags ?? []
+      )
+      setValue('')
+      if (textareaRef.current) textareaRef.current.style.height = 'auto'
+    } catch {
+      setAiError('No se pudo conectar con la IA. Verificá tu conexión.')
+    } finally {
+      setProcessing(false)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -52,6 +76,9 @@ export function EntryInput() {
           'focus:outline-none resize-none leading-relaxed'
         )}
       />
+      {aiError && (
+        <p className="text-xs text-red-400">{aiError}</p>
+      )}
       <div className="flex items-center gap-2 pt-1 border-t border-border">
         <VoiceButton onTranscript={(t) => setValue((v) => v + (v ? ' ' : '') + t)} />
         <div className="flex-1" />

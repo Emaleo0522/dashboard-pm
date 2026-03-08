@@ -20,8 +20,23 @@ interface TagFilterProps {
 }
 
 export function TagFilter({ tags, selectedTag, selectedColor, onTagSelect, onColorSelect }: TagFilterProps) {
+  const hasFilter = selectedTag !== null || selectedColor !== null
+
+  const clearAll = () => {
+    onTagSelect(null)
+    onColorSelect(null)
+  }
+
   return (
     <div className="flex items-center gap-3 flex-wrap">
+      {hasFilter && (
+        <button
+          onClick={clearAll}
+          className="px-2 py-0.5 rounded-full text-xs font-medium bg-accent-dim text-accent border border-accent/30 transition-all"
+        >
+          Todas
+        </button>
+      )}
       <div className="flex items-center gap-1">
         {NOTE_COLORS.map((color) => (
           <button
