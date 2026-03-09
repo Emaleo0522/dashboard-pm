@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
 import { useBrainstormStore } from '@/store/useBrainstormStore'
 import { useBacklogStore } from '@/store/useBacklogStore'
@@ -25,10 +25,52 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
   const [tags, setTags] = useState<string[]>(note.tags || [])
   const [tagInput, setTagInput] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const { updateNote, deleteNote } = useBrainstormStore()
+  const { updateNote, deleteNote, resizeNote } = useBrainstormStore()
   const { addCard } = useBacklogStore()
   const colors = COLOR_STYLES[note.color] || COLOR_STYLES.indigo
   const editContainerRef = useRef<HTMLDivElement>(null)
+
+  // Resize state
+  const noteRef = useRef<HTMLDivElement>(null)
+  const resizing = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null)
+  const currentSize = useRef({
+    width: note.size?.width ?? 208,
+    height: note.size?.height ?? 0
+  })
+  const [displaySize, setDisplaySize] = useState(currentSize.current)
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizing.current) return
+      const newW = Math.max(150, resizing.current.startW + e.clientX - resizing.current.startX)
+      const newH = Math.max(100, resizing.current.startH + e.clientY - resizing.current.startY)
+      currentSize.current = { width: newW, height: newH }
+      setDisplaySize({ width: newW, height: newH })
+    }
+    const handleMouseUp = () => {
+      if (!resizing.current) return
+      resizing.current = null
+      resizeNote(note.id, currentSize.current)
+    }
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [note.id, resizeNote])
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+    const rect = noteRef.current?.getBoundingClientRect()
+    resizing.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startW: currentSize.current.width,
+      startH: rect?.height ?? 150,
+    }
+  }, [])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (editing) return
@@ -50,12 +92,18 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
 
   return (
     <div
+      ref={noteRef}
       className={cn(
-        'absolute w-52 rounded-xl border p-3.5 shadow-lg group',
+        'absolute rounded-xl border p-3.5 shadow-lg group',
         colors.bg, colors.border,
         !editing && 'cursor-grab active:cursor-grabbing select-none'
       )}
-      style={{ left: note.position.x, top: note.position.y }}
+      style={{
+        left: note.position.x,
+        top: note.position.y,
+        width: displaySize.width,
+        ...(displaySize.height > 0 ? { height: displaySize.height } : {}),
+      }}
       onMouseDown={handleMouseDown}
     >
       {/* Confirm delete overlay */}
@@ -172,6 +220,16 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
       >
         → Backlog
       </button>
+
+      {/* Resize handle */}
+      <div
+        className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize opacity-0 group-hover:opacity-60 hover:opacity-100 transition-opacity flex items-end justify-end p-1"
+        onMouseDown={handleResizeStart}
+      >
+        <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+          <path d="M1 7L7 1M4 7L7 4M7 7V7" stroke="currentColor" className="text-white/60" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+      </div>
     </div>
   )
 }

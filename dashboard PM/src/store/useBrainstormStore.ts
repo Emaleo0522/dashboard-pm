@@ -9,6 +9,7 @@ interface BrainstormState {
   updateNote: (id: string, updates: Partial<StickyNote>) => void
   moveNote: (id: string, position: { x: number; y: number }) => void
   deleteNote: (id: string) => void
+  resizeNote: (id: string, size: { width: number; height: number }) => void
 }
 
 export const useBrainstormStore = create<BrainstormState>()(
@@ -39,6 +40,10 @@ export const useBrainstormStore = create<BrainstormState>()(
         })),
       deleteNote: (id) =>
         set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+      resizeNote: (id, size) =>
+        set((s) => ({
+          notes: s.notes.map((n) => n.id === id ? { ...n, size } : n),
+        })),
     }),
     { name: 'pm-brainstorm' }
   )

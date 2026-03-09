@@ -6,5 +6,6 @@ export interface StickyNote {
   color: NoteColor
   tags: string[]
   position: { x: number; y: number }
+  size?: { width: number; height: number }
   createdAt: string
 }

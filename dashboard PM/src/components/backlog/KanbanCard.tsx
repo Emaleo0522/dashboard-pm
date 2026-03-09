@@ -144,23 +144,33 @@ export function KanbanCard({ card }: KanbanCardProps) {
               </button>
             </div>
             {/* Color picker */}
-            <div className="flex items-center gap-1 mt-1">
+            <div
+              className="flex items-center gap-1 mt-1"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               <span className="text-xs text-text-muted mr-1">Color:</span>
               {COLOR_OPTIONS.map(c => (
                 <button
                   key={c}
                   type="button"
-                  onClick={() => setCardColor(cardColor === c ? undefined : c)}
-                  className={`w-4 h-4 rounded-full transition-all ${CARD_COLOR_STYLES[c].dot} ${
-                    cardColor === c ? 'ring-2 ring-white/50 ring-offset-1 scale-125' : 'opacity-50 hover:opacity-100'
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setCardColor(cardColor === c ? undefined : c)
+                  }}
+                  className={`w-5 h-5 rounded-full transition-all ${CARD_COLOR_STYLES[c].dot} ${
+                    cardColor === c
+                      ? 'ring-2 ring-white ring-offset-2 ring-offset-black/50 scale-125 opacity-100'
+                      : 'opacity-60 hover:opacity-100 hover:scale-110'
                   }`}
                 />
               ))}
               {cardColor && (
                 <button
                   type="button"
-                  onClick={() => setCardColor(undefined)}
-                  className="text-xs text-text-muted hover:text-text-primary ml-1"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); setCardColor(undefined) }}
+                  className="text-xs text-text-muted hover:text-text-primary ml-1 leading-none"
                 >
                   ×
                 </button>
