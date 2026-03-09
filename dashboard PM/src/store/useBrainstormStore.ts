@@ -5,7 +5,7 @@ import { mockStickyNotes } from '@/data/mock'
 
 interface BrainstormState {
   notes: StickyNote[]
-  addNote: (content: string, color: NoteColor) => void
+  addNote: (content: string, color: NoteColor, tags?: string[]) => void
   updateNote: (id: string, updates: Partial<StickyNote>) => void
   moveNote: (id: string, position: { x: number; y: number }) => void
   deleteNote: (id: string) => void
@@ -15,7 +15,7 @@ export const useBrainstormStore = create<BrainstormState>()(
   persist(
     (set) => ({
       notes: mockStickyNotes,
-      addNote: (content, color) =>
+      addNote: (content, color, tags) =>
         set((s) => ({
           notes: [
             ...s.notes,
@@ -23,7 +23,7 @@ export const useBrainstormStore = create<BrainstormState>()(
               id: crypto.randomUUID(),
               content,
               color,
-              tags: [],
+              tags: tags ?? [],
               position: { x: Math.random() * 400 + 40, y: Math.random() * 200 + 40 },
               createdAt: new Date().toISOString(),
             },

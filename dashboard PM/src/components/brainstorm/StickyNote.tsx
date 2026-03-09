@@ -22,6 +22,8 @@ interface StickyNoteProps {
 export function StickyNote({ note, onDragStart }: StickyNoteProps) {
   const [editing, setEditing] = useState(false)
   const [content, setContent] = useState(note.content)
+  const [tags, setTags] = useState<string[]>(note.tags || [])
+  const [tagInput, setTagInput] = useState('')
   const [confirmDelete, setConfirmDelete] = useState(false)
   const { updateNote, deleteNote } = useBrainstormStore()
   const { addCard } = useBacklogStore()
@@ -34,7 +36,14 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
   }
 
   const saveContent = () => {
-    updateNote(note.id, { content })
+    updateNote(note.id, { content, tags })
+    setEditing(false)
+  }
+
+  const cancelEditing = () => {
+    setContent(note.content)
+    setTags(note.tags || [])
+    setTagInput('')
     setEditing(false)
   }
 
@@ -70,16 +79,66 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
 
       {/* Content */}
       {editing ? (
-        <textarea
-          autoFocus
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          onBlur={saveContent}
-          onKeyDown={(e) => { if (e.key === 'Enter' && e.metaKey) saveContent() }}
-          className={cn('w-full bg-transparent text-sm leading-relaxed resize-none focus:outline-none', colors.text)}
-          rows={4}
-          onMouseDown={(e) => e.stopPropagation()}
-        />
+        <>
+          <textarea
+            autoFocus
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onBlur={saveContent}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && e.metaKey) saveContent()
+              if (e.key === 'Escape') cancelEditing()
+            }}
+            className={cn('w-full bg-transparent text-sm leading-relaxed resize-none focus:outline-none', colors.text)}
+            rows={4}
+            onMouseDown={(e) => e.stopPropagation()}
+          />
+          {/* Tags management en edición */}
+          <div className="flex flex-wrap gap-1 mt-2">
+            {tags.map(tag => (
+              <span key={tag} className="flex items-center gap-1 text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">
+                {tag}
+                <button
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); setTags(prev => prev.filter(t => t !== tag)) }}
+                  className="hover:text-red-300 ml-0.5"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="flex gap-1 mt-1">
+            <input
+              onMouseDown={(e) => e.stopPropagation()}
+              className="flex-1 bg-white/10 text-white text-xs px-2 py-1 rounded border border-white/20 focus:outline-none placeholder-white/40"
+              placeholder="Agregar tag..."
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                e.stopPropagation()
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  const t = tagInput.trim()
+                  if (t && !tags.includes(t)) setTags(prev => [...prev, t])
+                  setTagInput('')
+                }
+              }}
+            />
+            <button
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                const t = tagInput.trim()
+                if (t && !tags.includes(t)) setTags(prev => [...prev, t])
+                setTagInput('')
+              }}
+              className="text-xs bg-white/20 text-white px-2 py-1 rounded hover:bg-white/30"
+            >
+              +
+            </button>
+          </div>
+        </>
       ) : (
         <p
           className={cn('text-sm leading-relaxed', colors.text)}

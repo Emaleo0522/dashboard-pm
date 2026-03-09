@@ -37,7 +37,7 @@ export function EntryCard({ entry }: EntryCardProps) {
   }
 
   const handleSendToBrainstorm = () => {
-    addBrainstormNote(entry.content, 'indigo')
+    addBrainstormNote(entry.content, 'indigo', entry.tags)
     updateStatus(entry.id, 'archived')
     setMenuOpen(false)
     setSentTo('Brainstorm')
