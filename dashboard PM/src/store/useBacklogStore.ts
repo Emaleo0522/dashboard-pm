@@ -9,6 +9,7 @@ interface AddCardData {
   description?: string
   tags?: string[]
   priority?: 'urgent' | 'high' | 'medium' | 'low'
+  color?: 'indigo' | 'violet' | 'emerald' | 'amber' | 'rose'
 }
 
 interface BacklogState {
@@ -34,6 +35,7 @@ export const useBacklogStore = create<BacklogState>()(
               description: data.description,
               tags: data.tags,
               priority: data.priority,
+              color: data.color,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },

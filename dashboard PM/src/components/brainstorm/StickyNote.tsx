@@ -166,7 +166,7 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
 
       {/* Send to Backlog button */}
       <button
-        onClick={(e) => { e.stopPropagation(); addCard({ title: note.content, columnId: 'raw', tags: tags }) }}
+        onClick={(e) => { e.stopPropagation(); addCard({ title: note.content, columnId: 'raw', tags: tags, color: note.color }) }}
         onMouseDown={(e) => e.stopPropagation()}
         className="mt-2 w-full opacity-0 group-hover:opacity-100 text-xs bg-white/10 text-white/70 hover:bg-white/20 hover:text-white px-2 py-1 rounded transition-all"
       >

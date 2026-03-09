@@ -17,12 +17,24 @@ const PRIORITY_COLORS: Record<string, string> = {
   high: 'bg-red-500/20 text-red-400',
 }
 
+const CARD_COLOR_STYLES: Record<string, { border: string; dot: string }> = {
+  indigo:  { border: 'border-l-indigo-500',  dot: 'bg-indigo-500' },
+  violet:  { border: 'border-l-violet-500',  dot: 'bg-violet-500' },
+  emerald: { border: 'border-l-emerald-500', dot: 'bg-emerald-500' },
+  amber:   { border: 'border-l-amber-500',   dot: 'bg-amber-500' },
+  rose:    { border: 'border-l-rose-500',    dot: 'bg-rose-500' },
+}
+
+const COLOR_OPTIONS = ['indigo', 'violet', 'emerald', 'amber', 'rose'] as const
+type CardColor = typeof COLOR_OPTIONS[number]
+
 export function KanbanCard({ card }: KanbanCardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
   const [tagInput, setTagInput] = useState('')
   const [tags, setTags] = useState<string[]>(card.tags || [])
+  const [cardColor, setCardColor] = useState<CardColor | undefined>(card.color as CardColor | undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [sendingToLinear, setSendingToLinear] = useState(false)
   const [linearIssueId, setLinearIssueId] = useState<string | undefined>(card.linearIssueId)
@@ -38,7 +50,7 @@ export function KanbanCard({ card }: KanbanCardProps) {
   }
 
   const handleSave = () => {
-    updateCard(card.id, { title, description, tags })
+    updateCard(card.id, { title, description, tags, color: cardColor })
     setEditing(false)
   }
 
@@ -79,7 +91,9 @@ export function KanbanCard({ card }: KanbanCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="bg-surface-secondary border border-border rounded-lg p-3 group relative"
+      className={`bg-surface-secondary border border-border rounded-lg p-3 group relative ${
+        cardColor ? `border-l-4 ${CARD_COLOR_STYLES[cardColor].border}` : ''
+      }`}
     >
       {/* Drag handle */}
       <div
@@ -129,6 +143,29 @@ export function KanbanCard({ card }: KanbanCardProps) {
                 +
               </button>
             </div>
+            {/* Color picker */}
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-xs text-text-muted mr-1">Color:</span>
+              {COLOR_OPTIONS.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCardColor(cardColor === c ? undefined : c)}
+                  className={`w-4 h-4 rounded-full transition-all ${CARD_COLOR_STYLES[c].dot} ${
+                    cardColor === c ? 'ring-2 ring-white/50 ring-offset-1 scale-125' : 'opacity-50 hover:opacity-100'
+                  }`}
+                />
+              ))}
+              {cardColor && (
+                <button
+                  type="button"
+                  onClick={() => setCardColor(undefined)}
+                  className="text-xs text-text-muted hover:text-text-primary ml-1"
+                >
+                  ×
+                </button>
+              )}
+            </div>
             <div className="flex gap-2 pt-1">
               <button
                 onClick={handleSave}
@@ -137,7 +174,13 @@ export function KanbanCard({ card }: KanbanCardProps) {
                 Guardar
               </button>
               <button
-                onClick={() => { setEditing(false); setTitle(card.title); setDescription(card.description || ''); setTags(card.tags || []) }}
+                onClick={() => {
+                  setEditing(false)
+                  setTitle(card.title)
+                  setDescription(card.description || '')
+                  setTags(card.tags || [])
+                  setCardColor(card.color as CardColor | undefined)
+                }}
                 className="flex-1 text-xs bg-surface-tertiary text-text-secondary px-2 py-1 rounded hover:bg-border"
               >
                 Cancelar
