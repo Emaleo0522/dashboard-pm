@@ -43,7 +43,7 @@ export function CalendarConfig() {
       <div>
         <h3 className="text-sm font-semibold text-text-primary mb-1">Google Calendar</h3>
         <p className="text-xs text-text-muted">
-          Peg\u00e1 tu URL secreta en formato iCal para importar reuniones al Historial.
+          Pegá tu URL secreta en formato iCal para importar reuniones al Historial.
         </p>
       </div>
 
@@ -56,7 +56,7 @@ export function CalendarConfig() {
           placeholder="https://calendar.google.com/calendar/ical/..."
         />
         <p className="text-xs text-text-muted">
-          Encontr\u00e1la en Google Calendar &rarr; &#9881;&#65039; &rarr; Configuraci\u00f3n del calendario &rarr; &apos;Direcci\u00f3n secreta en formato iCal&apos;
+          Encontrála en Google Calendar &rarr; &#9881;&#65039; &rarr; Configuración del calendario &rarr; &apos;Dirección secreta en formato iCal&apos;
         </p>
       </div>
 

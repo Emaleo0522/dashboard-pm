@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { useBrainstormStore } from '@/store/useBrainstormStore'
+import { useBacklogStore } from '@/store/useBacklogStore'
 import type { StickyNote as StickyNoteType } from '@/types/brainstorm'
 import { cn } from '@/lib/utils'
 
@@ -21,7 +22,9 @@ interface StickyNoteProps {
 export function StickyNote({ note, onDragStart }: StickyNoteProps) {
   const [editing, setEditing] = useState(false)
   const [content, setContent] = useState(note.content)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const { updateNote, deleteNote } = useBrainstormStore()
+  const { addCard } = useBacklogStore()
   const colors = COLOR_STYLES[note.color] || COLOR_STYLES.indigo
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -45,9 +48,20 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
       style={{ left: note.position.x, top: note.position.y }}
       onMouseDown={handleMouseDown}
     >
+      {/* Confirm delete overlay */}
+      {confirmDelete && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 rounded-lg z-10 gap-2">
+          <span className="text-xs text-white">¿Eliminar?</span>
+          <div className="flex gap-2">
+            <button onClick={() => deleteNote(note.id)} className="text-xs bg-red-500 text-white px-2 py-1 rounded">Sí</button>
+            <button onClick={() => setConfirmDelete(false)} className="text-xs bg-white/20 text-white px-2 py-1 rounded">No</button>
+          </div>
+        </div>
+      )}
+
       {/* Delete */}
       <button
-        onClick={(e) => { e.stopPropagation(); deleteNote(note.id) }}
+        onClick={(e) => { e.stopPropagation(); setConfirmDelete(true) }}
         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-white/40 hover:text-white/80 transition-all"
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -83,6 +97,15 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
           ))}
         </div>
       )}
+
+      {/* Send to Backlog button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); addCard({ title: note.content, columnId: 'raw' }) }}
+        onMouseDown={(e) => e.stopPropagation()}
+        className="mt-2 w-full opacity-0 group-hover:opacity-100 text-xs bg-white/10 text-white/70 hover:bg-white/20 hover:text-white px-2 py-1 rounded transition-all"
+      >
+        → Backlog
+      </button>
     </div>
   )
 }
