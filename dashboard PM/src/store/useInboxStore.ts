@@ -37,7 +37,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
   load: async () => {
     if (get().isLoaded) return
     try {
-      const res = await fetch('/api/pb/inbox_entries?perPage=200&sort=-created')
+      const res = await fetch('/api/pb/inbox_entries?perPage=200&sort=-id')
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
       if (!data.items) throw new Error('Unexpected response shape')
