@@ -32,10 +32,12 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
     if (get().isLoaded) return
     try {
       const res = await fetch('/api/pb/meeting_history?perPage=200&sort=-date')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      set({ meetings: (data.items ?? []).map(pbToMeeting), isLoaded: true })
-    } catch {
-      set({ isLoaded: true })
+      if (!data.items) throw new Error('Unexpected response shape')
+      set({ meetings: data.items.map(pbToMeeting), isLoaded: true })
+    } catch (err) {
+      console.error('[HistoryStore] load failed:', err)
     }
   },
 

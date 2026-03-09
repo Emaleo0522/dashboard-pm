@@ -38,10 +38,13 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
     if (get().isLoaded) return
     try {
       const res = await fetch('/api/pb/inbox_entries?perPage=200&sort=-created')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      set({ entries: (data.items ?? []).map(pbToEntry), isLoaded: true })
-    } catch {
-      set({ isLoaded: true })
+      if (!data.items) throw new Error('Unexpected response shape')
+      set({ entries: data.items.map(pbToEntry), isLoaded: true })
+    } catch (err) {
+      console.error('[InboxStore] load failed:', err)
+      // No marcar isLoaded:true para que el próximo montaje reintente
     }
   },
 

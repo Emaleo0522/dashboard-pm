@@ -35,10 +35,12 @@ export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
     if (get().isLoaded) return
     try {
       const res = await fetch('/api/pb/brainstorm_notes?perPage=200&sort=created')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      set({ notes: (data.items ?? []).map(pbToNote), isLoaded: true })
-    } catch {
-      set({ isLoaded: true })
+      if (!data.items) throw new Error('Unexpected response shape')
+      set({ notes: data.items.map(pbToNote), isLoaded: true })
+    } catch (err) {
+      console.error('[BrainstormStore] load failed:', err)
     }
   },
 

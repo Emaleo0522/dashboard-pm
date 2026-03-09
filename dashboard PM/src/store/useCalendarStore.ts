@@ -47,10 +47,12 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
     if (get().isLoaded) return
     try {
       const res = await fetch('/api/pb/calendar_events?perPage=500&sort=date')
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data = await res.json()
-      set({ events: (data.items ?? []).map(pbToEvent), isLoaded: true })
-    } catch {
-      set({ isLoaded: true })
+      if (!data.items) throw new Error('Unexpected response shape')
+      set({ events: data.items.map(pbToEvent), isLoaded: true })
+    } catch (err) {
+      console.error('[CalendarStore] load failed:', err)
     }
   },
 
