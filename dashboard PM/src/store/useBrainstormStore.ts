@@ -1,50 +1,119 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { StickyNote, NoteColor } from '@/types/brainstorm'
-import { mockStickyNotes } from '@/data/mock'
 
 interface BrainstormState {
   notes: StickyNote[]
-  addNote: (content: string, color: NoteColor, tags?: string[]) => void
+  isLoaded: boolean
+  load: () => Promise<void>
+  addNote: (content: string, color: NoteColor, tags?: string[]) => Promise<void>
   updateNote: (id: string, updates: Partial<StickyNote>) => void
   moveNote: (id: string, position: { x: number; y: number }) => void
   deleteNote: (id: string) => void
   resizeNote: (id: string, size: { width: number; height: number }) => void
 }
 
-export const useBrainstormStore = create<BrainstormState>()(
-  persist(
-    (set) => ({
-      notes: mockStickyNotes,
-      addNote: (content, color, tags) =>
-        set((s) => ({
-          notes: [
-            ...s.notes,
-            {
-              id: crypto.randomUUID(),
-              content,
-              color,
-              tags: tags ?? [],
-              position: { x: Math.random() * 400 + 40, y: Math.random() * 200 + 40 },
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        })),
-      updateNote: (id, updates) =>
-        set((s) => ({
-          notes: s.notes.map((n) => (n.id === id ? { ...n, ...updates } : n)),
-        })),
-      moveNote: (id, position) =>
-        set((s) => ({
-          notes: s.notes.map((n) => (n.id === id ? { ...n, position } : n)),
-        })),
-      deleteNote: (id) =>
-        set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
-      resizeNote: (id, size) =>
-        set((s) => ({
-          notes: s.notes.map((n) => n.id === id ? { ...n, size } : n),
-        })),
-    }),
-    { name: 'pm-brainstorm' }
-  )
-)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pbToNote(r: any): StickyNote {
+  return {
+    id: r.id,
+    content: r.content,
+    color: r.color as NoteColor,
+    tags: Array.isArray(r.tags) ? r.tags : [],
+    position: { x: r.posX ?? 100, y: r.posY ?? 100 },
+    size: r.size ?? undefined,
+    createdAt: r.created,
+  }
+}
+
+export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
+  notes: [],
+  isLoaded: false,
+
+  load: async () => {
+    if (get().isLoaded) return
+    try {
+      const res = await fetch('/api/pb/brainstorm_notes?perPage=200&sort=created')
+      const data = await res.json()
+      set({ notes: (data.items ?? []).map(pbToNote), isLoaded: true })
+    } catch {
+      set({ isLoaded: true })
+    }
+  },
+
+  addNote: async (content, color, tags) => {
+    const tempId = `temp_${crypto.randomUUID()}`
+    const pos = { x: Math.random() * 400 + 40, y: Math.random() * 200 + 40 }
+    const optimistic: StickyNote = {
+      id: tempId,
+      content,
+      color,
+      tags: tags ?? [],
+      position: pos,
+      createdAt: new Date().toISOString(),
+    }
+    set((s) => ({ notes: [...s.notes, optimistic] }))
+    try {
+      const res = await fetch('/api/pb/brainstorm_notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content,
+          color,
+          tags: tags ?? [],
+          posX: pos.x,
+          posY: pos.y,
+        }),
+      })
+      const item = await res.json()
+      set((s) => ({
+        notes: s.notes.map((n) => (n.id === tempId ? pbToNote(item) : n)),
+      }))
+    } catch {
+      set((s) => ({ notes: s.notes.filter((n) => n.id !== tempId) }))
+    }
+  },
+
+  updateNote: (id, updates) => {
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === id ? { ...n, ...updates } : n)),
+    }))
+    const pbUpdates: Record<string, unknown> = { ...updates }
+    if (updates.position) {
+      pbUpdates.posX = updates.position.x
+      pbUpdates.posY = updates.position.y
+      delete pbUpdates.position
+    }
+    fetch(`/api/pb/brainstorm_notes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pbUpdates),
+    }).catch(() => {})
+  },
+
+  moveNote: (id, position) => {
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === id ? { ...n, position } : n)),
+    }))
+    fetch(`/api/pb/brainstorm_notes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ posX: position.x, posY: position.y }),
+    }).catch(() => {})
+  },
+
+  deleteNote: (id) => {
+    set((s) => ({ notes: s.notes.filter((n) => n.id !== id) }))
+    fetch(`/api/pb/brainstorm_notes/${id}`, { method: 'DELETE' }).catch(() => {})
+  },
+
+  resizeNote: (id, size) => {
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === id ? { ...n, size } : n)),
+    }))
+    fetch(`/api/pb/brainstorm_notes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ size }),
+    }).catch(() => {})
+  },
+}))

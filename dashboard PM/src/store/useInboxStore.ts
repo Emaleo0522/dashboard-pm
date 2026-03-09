@@ -1,53 +1,111 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 import type { InboxEntry, EntryStatus } from '@/types/inbox'
-import { mockInboxEntries } from '@/data/mock'
 
 interface InboxState {
   entries: InboxEntry[]
-  addEntry: (content: string) => void
-  addClassifiedEntry: (content: string, classifiedAs: NonNullable<InboxEntry['classifiedAs']>, tags: string[]) => void
+  isLoaded: boolean
+  load: () => Promise<void>
+  addEntry: (content: string) => Promise<void>
+  addClassifiedEntry: (
+    content: string,
+    classifiedAs: NonNullable<InboxEntry['classifiedAs']>,
+    tags: string[]
+  ) => Promise<void>
   updateStatus: (id: string, status: EntryStatus) => void
   deleteEntry: (id: string) => void
 }
 
-export const useInboxStore = create<InboxState>()(
-  persist(
-    (set) => ({
-      entries: mockInboxEntries,
-      addEntry: (content) =>
-        set((s) => ({
-          entries: [
-            {
-              id: crypto.randomUUID(),
-              content,
-              status: 'unprocessed',
-              createdAt: new Date().toISOString(),
-            },
-            ...s.entries,
-          ],
-        })),
-      addClassifiedEntry: (content, classifiedAs, tags) =>
-        set((s) => ({
-          entries: [
-            {
-              id: crypto.randomUUID(),
-              content,
-              status: 'classified',
-              classifiedAs,
-              tags,
-              createdAt: new Date().toISOString(),
-            },
-            ...s.entries,
-          ],
-        })),
-      updateStatus: (id, status) =>
-        set((s) => ({
-          entries: s.entries.map((e) => (e.id === id ? { ...e, status } : e)),
-        })),
-      deleteEntry: (id) =>
-        set((s) => ({ entries: s.entries.filter((e) => e.id !== id) })),
-    }),
-    { name: 'pm-inbox' }
-  )
-)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pbToEntry(r: any): InboxEntry {
+  return {
+    id: r.id,
+    content: r.content,
+    status: (r.status as EntryStatus) || 'unprocessed',
+    classifiedAs: r.classifiedAs || undefined,
+    tags: Array.isArray(r.tags) ? r.tags : [],
+    convertedIssueId: r.convertedIssueId || undefined,
+    createdAt: r.created,
+  }
+}
+
+export const useInboxStore = create<InboxState>()((set, get) => ({
+  entries: [],
+  isLoaded: false,
+
+  load: async () => {
+    if (get().isLoaded) return
+    try {
+      const res = await fetch('/api/pb/inbox_entries?perPage=200&sort=-created')
+      const data = await res.json()
+      set({ entries: (data.items ?? []).map(pbToEntry), isLoaded: true })
+    } catch {
+      set({ isLoaded: true })
+    }
+  },
+
+  addEntry: async (content) => {
+    const tempId = `temp_${crypto.randomUUID()}`
+    const optimistic: InboxEntry = {
+      id: tempId,
+      content,
+      status: 'unprocessed',
+      createdAt: new Date().toISOString(),
+    }
+    set((s) => ({ entries: [optimistic, ...s.entries] }))
+    try {
+      const res = await fetch('/api/pb/inbox_entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, status: 'unprocessed', tags: [] }),
+      })
+      const item = await res.json()
+      set((s) => ({
+        entries: s.entries.map((e) => (e.id === tempId ? pbToEntry(item) : e)),
+      }))
+    } catch {
+      set((s) => ({ entries: s.entries.filter((e) => e.id !== tempId) }))
+    }
+  },
+
+  addClassifiedEntry: async (content, classifiedAs, tags) => {
+    const tempId = `temp_${crypto.randomUUID()}`
+    const optimistic: InboxEntry = {
+      id: tempId,
+      content,
+      status: 'classified',
+      classifiedAs,
+      tags,
+      createdAt: new Date().toISOString(),
+    }
+    set((s) => ({ entries: [optimistic, ...s.entries] }))
+    try {
+      const res = await fetch('/api/pb/inbox_entries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, status: 'classified', classifiedAs, tags }),
+      })
+      const item = await res.json()
+      set((s) => ({
+        entries: s.entries.map((e) => (e.id === tempId ? pbToEntry(item) : e)),
+      }))
+    } catch {
+      set((s) => ({ entries: s.entries.filter((e) => e.id !== tempId) }))
+    }
+  },
+
+  updateStatus: (id, status) => {
+    set((s) => ({
+      entries: s.entries.map((e) => (e.id === id ? { ...e, status } : e)),
+    }))
+    fetch(`/api/pb/inbox_entries/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }).catch(() => {})
+  },
+
+  deleteEntry: (id) => {
+    set((s) => ({ entries: s.entries.filter((e) => e.id !== id) }))
+    fetch(`/api/pb/inbox_entries/${id}`, { method: 'DELETE' }).catch(() => {})
+  },
+}))
