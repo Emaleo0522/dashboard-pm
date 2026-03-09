@@ -12,11 +12,11 @@ export function StoreInitializer() {
   const loadAuth = useAuthStore((s) => s.load)
 
   useEffect(() => {
-    // Auth primero, luego el resto en paralelo
-    loadAuth()
-    loadBacklog()
-    loadBrainstorm()
-    loadInbox()
+    const init = async () => {
+      await loadAuth()
+      await Promise.all([loadBacklog(), loadBrainstorm(), loadInbox()])
+    }
+    init()
   }, [loadAuth, loadBacklog, loadBrainstorm, loadInbox])
 
   return null

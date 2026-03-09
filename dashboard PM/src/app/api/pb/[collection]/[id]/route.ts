@@ -15,16 +15,26 @@ export async function PATCH(
   const { collection, id } = await params
   const body = await req.json()
   const token = getToken(req)
-  const res = await fetch(`${PB}/api/collections/${collection}/records/${id}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify(body),
-  })
-  const data = await res.json()
-  return NextResponse.json(data, { status: res.status })
+  try {
+    const res = await fetch(`${PB}/api/collections/${collection}/records/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error(`[PB proxy] PATCH ${collection}/${id} → ${res.status}: ${errBody}`)
+      return NextResponse.json({ error: errBody, status: res.status }, { status: res.status })
+    }
+    const data = await res.json()
+    return NextResponse.json(data)
+  } catch (err) {
+    console.error(`[PB proxy] PATCH ${collection}/${id} → network error:`, err)
+    return NextResponse.json({ error: 'PocketBase unreachable' }, { status: 502 })
+  }
 }
 
 export async function DELETE(
@@ -33,11 +43,21 @@ export async function DELETE(
 ) {
   const { collection, id } = await params
   const token = getToken(req)
-  const res = await fetch(`${PB}/api/collections/${collection}/records/${id}`, {
-    method: 'DELETE',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  })
-  if (res.status === 204) return new NextResponse(null, { status: 204 })
-  const data = await res.json()
-  return NextResponse.json(data, { status: res.status })
+  try {
+    const res = await fetch(`${PB}/api/collections/${collection}/records/${id}`, {
+      method: 'DELETE',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (res.status === 204) return new NextResponse(null, { status: 204 })
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error(`[PB proxy] DELETE ${collection}/${id} → ${res.status}: ${errBody}`)
+      return NextResponse.json({ error: errBody, status: res.status }, { status: res.status })
+    }
+    const data = await res.json()
+    return NextResponse.json(data)
+  } catch (err) {
+    console.error(`[PB proxy] DELETE ${collection}/${id} → network error:`, err)
+    return NextResponse.json({ error: 'PocketBase unreachable' }, { status: 502 })
+  }
 }
