@@ -14,17 +14,16 @@ const COLOR_STYLES: Record<NoteColor, string> = {
 interface TagFilterProps {
   tags: string[]
   selectedTag: string | null
-  selectedColor: NoteColor | null
+  selectedColor: NoteColor
   onTagSelect: (tag: string | null) => void
   onColorSelect: (color: NoteColor | null) => void
 }
 
 export function TagFilter({ tags, selectedTag, selectedColor, onTagSelect, onColorSelect }: TagFilterProps) {
-  const hasFilter = selectedTag !== null || selectedColor !== null
+  const hasFilter = selectedTag !== null
 
   const clearAll = () => {
     onTagSelect(null)
-    onColorSelect(null)
   }
 
   return (
@@ -41,8 +40,12 @@ export function TagFilter({ tags, selectedTag, selectedColor, onTagSelect, onCol
         {NOTE_COLORS.map((color) => (
           <button
             key={color}
-            onClick={() => onColorSelect(selectedColor === color ? null : color)}
-            className={`w-5 h-5 rounded-full border-2 transition-all ${COLOR_STYLES[color]} ${selectedColor === color ? 'scale-125' : 'opacity-60 hover:opacity-100'}`}
+            onClick={() => onColorSelect(color)}
+            className={`w-5 h-5 rounded-full border-2 transition-all ${COLOR_STYLES[color]} ${
+              selectedColor === color
+                ? 'scale-125 opacity-100 ring-2 ring-white/40 ring-offset-1 ring-offset-transparent'
+                : 'opacity-50 hover:opacity-90'
+            }`}
           />
         ))}
       </div>

@@ -6,13 +6,10 @@ import { TagFilter } from './TagFilter'
 import { useBrainstormStore } from '@/store/useBrainstormStore'
 import type { NoteColor } from '@/types/brainstorm'
 
-const COLORS: NoteColor[] = ['indigo', 'violet', 'emerald', 'amber', 'rose']
-
 export function StickyBoard() {
   const { notes, addNote, moveNote } = useBrainstormStore()
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
-  const [selectedColor, setSelectedColor] = useState<NoteColor | null>(null)
-  const [colorIdx, setColorIdx] = useState(0)
+  const [createColor, setCreateColor] = useState<NoteColor>('indigo')
   const boardRef = useRef<HTMLDivElement>(null)
   const dragging = useRef<{ id: string; offsetX: number; offsetY: number } | null>(null)
 
@@ -20,7 +17,6 @@ export function StickyBoard() {
 
   const filtered = notes.filter((n) => {
     if (selectedTag && !n.tags.includes(selectedTag)) return false
-    if (selectedColor && n.color !== selectedColor) return false
     return true
   })
 
@@ -41,8 +37,7 @@ export function StickyBoard() {
   }, [])
 
   const handleAddNote = () => {
-    addNote('Nueva idea...', COLORS[colorIdx % COLORS.length])
-    setColorIdx((i) => i + 1)
+    addNote('Nueva idea...', createColor)
   }
 
   return (
@@ -52,9 +47,9 @@ export function StickyBoard() {
         <TagFilter
           tags={allTags}
           selectedTag={selectedTag}
-          selectedColor={selectedColor}
+          selectedColor={createColor}
           onTagSelect={setSelectedTag}
-          onColorSelect={setSelectedColor}
+          onColorSelect={(c) => { if (c) setCreateColor(c) }}
         />
         <div className="flex-1" />
         <button
