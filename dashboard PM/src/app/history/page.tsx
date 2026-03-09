@@ -7,7 +7,7 @@ import { MeetingNoteModal } from '@/components/history/MeetingNoteModal'
 import { HelpTooltip } from '@/components/ui/HelpTooltip'
 import { Button } from '@/components/ui/Button'
 import { useHistoryStore } from '@/store/useHistoryStore'
-import { useSettingsStore } from '@/store/useSettingsStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import type { CalendarMeeting, Meeting } from '@/types/history'
 import { formatDate } from '@/lib/utils'
 
@@ -22,7 +22,8 @@ function isSameMeeting(cal: CalendarMeeting, stored: Meeting): boolean {
 
 export default function HistoryPage() {
   const { meetings } = useHistoryStore()
-  const { googleCalendarUrl } = useSettingsStore()
+  const user = useAuthStore((s) => s.user)
+  const googleCalendarUrl = user?.googleCalendarUrl ?? ''
 
   const [query, setQuery] = useState('')
   const [calendarMeetings, setCalendarMeetings] = useState<CalendarMeeting[]>([])

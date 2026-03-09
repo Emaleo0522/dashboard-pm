@@ -5,11 +5,9 @@ interface SettingsState {
   operatorName: string
   linearApiKey: string
   linearTeamId: string
-  googleCalendarUrl: string
   setOperatorName: (name: string) => void
   setLinearApiKey: (key: string) => void
   setLinearTeamId: (id: string) => void
-  setGoogleCalendarUrl: (url: string) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -18,11 +16,9 @@ export const useSettingsStore = create<SettingsState>()(
       operatorName: '',
       linearApiKey: '',
       linearTeamId: '',
-      googleCalendarUrl: '',
       setOperatorName: (name) => set({ operatorName: name }),
       setLinearApiKey: (key) => set({ linearApiKey: key }),
       setLinearTeamId: (id) => set({ linearTeamId: id }),
-      setGoogleCalendarUrl: (url) => set({ googleCalendarUrl: url }),
     }),
     { name: 'pm-settings' }
   )

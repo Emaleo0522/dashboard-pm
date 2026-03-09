@@ -3,21 +3,30 @@ import { useState } from 'react'
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { useSettingsStore } from '@/store/useSettingsStore'
+import { useAuthStore } from '@/store/useAuthStore'
 import { Card } from '@/components/ui/Card'
 import type { CalendarMeeting } from '@/types/history'
 
 export function CalendarConfig() {
-  const { googleCalendarUrl, setGoogleCalendarUrl } = useSettingsStore()
+  const { user, setGoogleCalendarUrl } = useAuthStore()
+  const googleCalendarUrl = user?.googleCalendarUrl ?? ''
+  const [localUrl, setLocalUrl] = useState(googleCalendarUrl)
+  const [saving, setSaving] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verifyResult, setVerifyResult] = useState<'ok' | 'error' | null>(null)
   const [verifyMsg, setVerifyMsg] = useState('')
+
+  const handleSave = async () => {
+    setSaving(true)
+    await setGoogleCalendarUrl(localUrl)
+    setSaving(false)
+  }
 
   const handleVerify = async () => {
     setVerifying(true)
     setVerifyResult(null)
     try {
-      const res = await fetch(`/api/calendar/meetings?url=${encodeURIComponent(googleCalendarUrl)}`)
+      const res = await fetch(`/api/calendar/meetings?url=${encodeURIComponent(localUrl)}`)
       const data: { ok: boolean; meetings?: CalendarMeeting[]; error?: string } = await res.json()
       if (data.ok && data.meetings) {
         setVerifyResult('ok')
@@ -26,6 +35,8 @@ export function CalendarConfig() {
             ? 'Calendario conectado — no hay reuniones pasadas aún'
             : `Calendario conectado — ${data.meetings.length} reunión${data.meetings.length !== 1 ? 'es' : ''} encontrada${data.meetings.length !== 1 ? 's' : ''}`
         )
+        // guardar automáticamente al verificar con éxito
+        await setGoogleCalendarUrl(localUrl)
       } else {
         setVerifyResult('error')
         setVerifyMsg(data.error ?? 'Error desconocido')
@@ -43,7 +54,7 @@ export function CalendarConfig() {
       <div>
         <h3 className="text-sm font-semibold text-text-primary mb-1">Google Calendar</h3>
         <p className="text-xs text-text-muted">
-          Pegá tu URL secreta en formato iCal para importar reuniones al Historial.
+          Pegá tu URL secreta en formato iCal para importar reuniones al Historial. Cada usuario tiene su propio calendario.
         </p>
       </div>
 
@@ -51,8 +62,8 @@ export function CalendarConfig() {
         <Input
           label="URL iCal secreta"
           type="url"
-          value={googleCalendarUrl}
-          onChange={(e) => setGoogleCalendarUrl(e.target.value)}
+          value={localUrl}
+          onChange={(e) => setLocalUrl(e.target.value)}
           placeholder="https://calendar.google.com/calendar/ical/..."
         />
         <p className="text-xs text-text-muted">
@@ -65,11 +76,22 @@ export function CalendarConfig() {
           variant="secondary"
           size="sm"
           onClick={handleVerify}
-          disabled={verifying || !googleCalendarUrl.trim()}
+          disabled={verifying || saving || !localUrl.trim()}
         >
           {verifying ? <Loader2 size={13} className="animate-spin" /> : null}
-          Verificar
+          Verificar y guardar
         </Button>
+        {localUrl !== googleCalendarUrl && !verifying && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? <Loader2 size={13} className="animate-spin" /> : null}
+            Guardar
+          </Button>
+        )}
         {verifyResult && (
           <div className={`flex items-center gap-1.5 text-xs ${verifyResult === 'ok' ? 'text-green-400' : 'text-red-400'}`}>
             {verifyResult === 'ok' ? <CheckCircle2 size={13} /> : <AlertCircle size={13} />}

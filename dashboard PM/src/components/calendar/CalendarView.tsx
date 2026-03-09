@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, CalendarDays } from 'lucide-react'
 import { useCalendarStore } from '@/store/useCalendarStore'
 import { useAuthStore } from '@/store/useAuthStore'
-import { useSettingsStore } from '@/store/useSettingsStore'
 import type { CalendarEvent, CalendarEventColor, CalendarEventType } from '@/types/calendar'
 import type { CalendarMeeting } from '@/types/history'
 
@@ -60,7 +59,7 @@ export function CalendarView() {
   const addEvent = useCalendarStore((s) => s.addEvent)
   const deleteEvent = useCalendarStore((s) => s.deleteEvent)
   const user = useAuthStore((s) => s.user)
-  const googleCalendarUrl = useSettingsStore((s) => s.googleCalendarUrl)
+  const googleCalendarUrl = user?.googleCalendarUrl ?? ''
 
   const [icsEvents, setIcsEvents] = useState<CalendarMeeting[]>([])
 
