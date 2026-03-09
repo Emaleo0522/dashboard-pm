@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { InboxEntry, EntryStatus } from '@/types/inbox'
+import { useAuthStore } from './useAuthStore'
 
 interface InboxState {
   entries: InboxEntry[]
@@ -24,6 +25,7 @@ function pbToEntry(r: any): InboxEntry {
     classifiedAs: r.classifiedAs || undefined,
     tags: Array.isArray(r.tags) ? r.tags : [],
     convertedIssueId: r.convertedIssueId || undefined,
+    createdBy: r.createdBy || undefined,
     createdAt: r.created,
   }
 }
@@ -44,11 +46,14 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
   },
 
   addEntry: async (content) => {
+    const user = useAuthStore.getState().user
+    const createdBy = user?.name || user?.email || undefined
     const tempId = `temp_${crypto.randomUUID()}`
     const optimistic: InboxEntry = {
       id: tempId,
       content,
       status: 'unprocessed',
+      createdBy,
       createdAt: new Date().toISOString(),
     }
     set((s) => ({ entries: [optimistic, ...s.entries] }))
@@ -56,7 +61,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       const res = await fetch('/api/pb/inbox_entries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, status: 'unprocessed', tags: [] }),
+        body: JSON.stringify({ content, status: 'unprocessed', tags: [], createdBy: createdBy ?? '' }),
       })
       const item = await res.json()
       set((s) => ({
@@ -68,6 +73,8 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
   },
 
   addClassifiedEntry: async (content, classifiedAs, tags) => {
+    const user = useAuthStore.getState().user
+    const createdBy = user?.name || user?.email || undefined
     const tempId = `temp_${crypto.randomUUID()}`
     const optimistic: InboxEntry = {
       id: tempId,
@@ -75,6 +82,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       status: 'classified',
       classifiedAs,
       tags,
+      createdBy,
       createdAt: new Date().toISOString(),
     }
     set((s) => ({ entries: [optimistic, ...s.entries] }))
@@ -82,7 +90,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       const res = await fetch('/api/pb/inbox_entries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, status: 'classified', classifiedAs, tags }),
+        body: JSON.stringify({ content, status: 'classified', classifiedAs, tags, createdBy: createdBy ?? '' }),
       })
       const item = await res.json()
       set((s) => ({

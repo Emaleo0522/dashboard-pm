@@ -222,6 +222,13 @@ export function KanbanCard({ card }: KanbanCardProps) {
               </span>
             )}
 
+            {/* Creator badge */}
+            {card.createdBy && (
+              <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-surface-tertiary text-text-muted border border-border">
+                {card.createdBy}
+              </span>
+            )}
+
             {/* Linear issue badge */}
             {linearIssueId && (
               <div className="mt-2 flex items-center gap-1 text-xs text-emerald-400">

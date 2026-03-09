@@ -182,6 +182,17 @@ export function IssueTable() {
                       )}
                     </div>
                   </div>
+                  {linearIssue?.url && (
+                    <a
+                      href={linearIssue.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-text-muted hover:text-accent transition-colors shrink-0"
+                      title="Abrir en Linear"
+                    >
+                      <ExternalLink size={13} />
+                    </a>
+                  )}
                 </div>
               )
             })}
@@ -225,6 +236,17 @@ export function IssueTable() {
                     )}
                   </div>
                 </div>
+                {issue.url && (
+                  <a
+                    href={issue.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-text-muted hover:text-accent transition-colors shrink-0"
+                    title="Abrir en Linear"
+                  >
+                    <ExternalLink size={13} />
+                  </a>
+                )}
               </div>
             ))}
           </div>

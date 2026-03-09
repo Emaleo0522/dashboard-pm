@@ -83,6 +83,11 @@ export function EntryCard({ entry }: EntryCardProps) {
             {entry.tags?.map((tag) => (
               <Badge key={tag} label={tag} />
             ))}
+            {entry.createdBy && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-overlay text-text-muted border border-border">
+                {entry.createdBy}
+              </span>
+            )}
             <span className="text-xs text-text-muted ml-auto">{formatDate(entry.createdAt)}</span>
           </div>
           {entry.convertedIssueId && (

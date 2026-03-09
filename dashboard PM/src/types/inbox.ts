@@ -8,4 +8,5 @@ export interface InboxEntry {
   classifiedAs?: 'feature' | 'bug' | 'improvement' | 'question' | 'decision'
   tags?: string[]
   convertedIssueId?: string
+  createdBy?: string
 }

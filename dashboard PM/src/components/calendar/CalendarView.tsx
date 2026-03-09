@@ -1,9 +1,11 @@
 'use client'
-import { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Clock, Trash2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, CalendarDays } from 'lucide-react'
 import { useCalendarStore } from '@/store/useCalendarStore'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useSettingsStore } from '@/store/useSettingsStore'
 import type { CalendarEvent, CalendarEventColor, CalendarEventType } from '@/types/calendar'
+import type { CalendarMeeting } from '@/types/history'
 
 const COLOR_MAP: Record<CalendarEventColor, string> = {
   indigo: 'bg-indigo-500',
@@ -27,6 +29,10 @@ const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
 
 function toYMD(y: number, m: number, d: number) {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`
+}
+
+function isoToYMD(iso: string): string {
+  return iso.substring(0, 10)
 }
 
 interface EventFormState {
@@ -54,6 +60,17 @@ export function CalendarView() {
   const addEvent = useCalendarStore((s) => s.addEvent)
   const deleteEvent = useCalendarStore((s) => s.deleteEvent)
   const user = useAuthStore((s) => s.user)
+  const googleCalendarUrl = useSettingsStore((s) => s.googleCalendarUrl)
+
+  const [icsEvents, setIcsEvents] = useState<CalendarMeeting[]>([])
+
+  useEffect(() => {
+    if (!googleCalendarUrl) { setIcsEvents([]); return }
+    fetch(`/api/calendar/meetings?url=${encodeURIComponent(googleCalendarUrl)}&all=true`)
+      .then(r => r.json())
+      .then(data => { if (data.ok) setIcsEvents(data.meetings) })
+      .catch(() => {})
+  }, [googleCalendarUrl])
 
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
@@ -77,6 +94,7 @@ export function CalendarView() {
   while (cells.length % 7 !== 0) cells.push(null)
 
   const eventsForDate = (date: string) => events.filter((e) => e.date === date)
+  const icsEventsForDate = (date: string) => icsEvents.filter((e) => isoToYMD(e.date) === date)
 
   function prevMonth() {
     if (month === 0) { setYear(y => y - 1); setMonth(11) }
@@ -89,6 +107,7 @@ export function CalendarView() {
 
   const todayStr = toYMD(now.getFullYear(), now.getMonth(), now.getDate())
   const selectedEvents = selectedDay ? eventsForDate(selectedDay) : []
+  const selectedIcsEvents = selectedDay ? icsEventsForDate(selectedDay) : []
 
   async function handleAdd() {
     if (!form.title.trim() || !selectedDay || !user) return
@@ -141,6 +160,7 @@ export function CalendarView() {
             if (!day) return <div key={i} className="aspect-square" />
             const dateStr = toYMD(year, month, day)
             const dayEvents = eventsForDate(dateStr)
+            const dayIcsEvents = icsEventsForDate(dateStr)
             const isToday = dateStr === todayStr
             const isSelected = dateStr === selectedDay
 
@@ -167,14 +187,34 @@ export function CalendarView() {
                       className={`w-1.5 h-1.5 rounded-full ${COLOR_MAP[ev.color ?? 'indigo']}`}
                     />
                   ))}
-                  {dayEvents.length > 3 && (
-                    <span className="text-[9px] text-text-muted">+{dayEvents.length - 3}</span>
+                  {dayIcsEvents.slice(0, 2).map((ev) => (
+                    <span
+                      key={ev.uid}
+                      className="w-1.5 h-1.5 rounded-full bg-sky-400"
+                    />
+                  ))}
+                  {(dayEvents.length + dayIcsEvents.length) > 5 && (
+                    <span className="text-[9px] text-text-muted">+{dayEvents.length + dayIcsEvents.length - 5}</span>
                   )}
                 </div>
               </button>
             )
           })}
         </div>
+
+        {/* Legend */}
+        {googleCalendarUrl && (
+          <div className="flex items-center gap-3 mt-3 px-1">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+              <span className="text-[10px] text-text-muted">Mis eventos</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-sky-400 shrink-0" />
+              <span className="text-[10px] text-text-muted">Google Calendar</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Side Panel */}
@@ -287,12 +327,15 @@ export function CalendarView() {
             )}
 
             {/* Events list */}
-            {selectedEvents.length === 0 && !showForm && (
+            {selectedEvents.length === 0 && selectedIcsEvents.length === 0 && !showForm && (
               <p className="text-xs text-text-muted text-center py-4">Sin eventos este día</p>
             )}
             <div className="space-y-2 overflow-y-auto flex-1">
               {selectedEvents.map((ev) => (
                 <EventCard key={ev.id} event={ev} onDelete={() => deleteEvent(ev.id)} />
+              ))}
+              {selectedIcsEvents.map((ev) => (
+                <ICSEventCard key={ev.uid} event={ev} />
               ))}
             </div>
           </>
@@ -331,6 +374,37 @@ function EventCard({ event, onDelete }: { event: CalendarEvent; onDelete: () => 
         >
           <Trash2 size={11} />
         </button>
+      </div>
+    </div>
+  )
+}
+
+function ICSEventCard({ event }: { event: CalendarMeeting }) {
+  const d = new Date(event.date)
+  const hasTime = d.getUTCHours() !== 0 || d.getUTCMinutes() !== 0
+  const startTime = hasTime
+    ? d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    : null
+  const endTime = event.endDate && hasTime
+    ? new Date(event.endDate).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+    : null
+
+  return (
+    <div className="border rounded-lg p-2.5 border-sky-500/50 bg-sky-500/10 text-sky-300">
+      <div className="flex items-start gap-2">
+        <CalendarDays size={11} className="shrink-0 mt-0.5 opacity-70" />
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium truncate">{event.title}</p>
+          {startTime && (
+            <p className="text-[10px] opacity-70 flex items-center gap-1 mt-0.5">
+              <Clock size={9} />
+              {startTime}{endTime ? ` - ${endTime}` : ''}
+            </p>
+          )}
+          {event.location && (
+            <p className="text-[10px] opacity-60 mt-0.5 truncate">{event.location}</p>
+          )}
+        </div>
       </div>
     </div>
   )

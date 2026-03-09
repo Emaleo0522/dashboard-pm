@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { BacklogCard, KanbanColumnId } from '@/types/backlog'
+import { useAuthStore } from './useAuthStore'
 
 interface AddCardData {
   title: string
@@ -31,6 +32,7 @@ function pbToCard(r: any): BacklogCard {
     tags: Array.isArray(r.tags) ? r.tags : [],
     color: r.color || undefined,
     linearIssueId: r.linearIssueId || undefined,
+    createdBy: r.createdBy || undefined,
     createdAt: r.created,
     updatedAt: r.updated,
   }
@@ -52,6 +54,8 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
   },
 
   addCard: async (data) => {
+    const user = useAuthStore.getState().user
+    const createdBy = user?.name || user?.email || undefined
     const tempId = `temp_${crypto.randomUUID()}`
     const optimistic: BacklogCard = {
       id: tempId,
@@ -61,6 +65,7 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
       tags: data.tags ?? [],
       priority: data.priority,
       color: data.color,
+      createdBy,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     }
@@ -77,6 +82,7 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
           priority: data.priority ?? '',
           color: data.color ?? '',
           linearIssueId: '',
+          createdBy: createdBy ?? '',
         }),
       })
       const item = await res.json()

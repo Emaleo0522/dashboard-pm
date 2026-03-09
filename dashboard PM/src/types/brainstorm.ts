@@ -7,5 +7,6 @@ export interface StickyNote {
   tags: string[]
   position: { x: number; y: number }
   size?: { width: number; height: number }
+  createdBy?: string
   createdAt: string
 }

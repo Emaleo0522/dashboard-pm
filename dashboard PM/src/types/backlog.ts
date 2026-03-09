@@ -9,6 +9,7 @@ export interface BacklogCard {
   tags?: string[]
   color?: 'indigo' | 'violet' | 'emerald' | 'amber' | 'rose'
   linearIssueId?: string
+  createdBy?: string
   createdAt: string
   updatedAt: string
 }

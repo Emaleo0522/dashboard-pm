@@ -203,6 +203,13 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
         </p>
       )}
 
+      {/* Creator badge */}
+      {note.createdBy && !editing && (
+        <span className="mt-1.5 inline-block text-[10px] opacity-50 bg-white/10 px-1.5 py-0.5 rounded">
+          {note.createdBy}
+        </span>
+      )}
+
       {/* Tags */}
       {note.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-white/10">

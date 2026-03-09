@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { StickyNote, NoteColor } from '@/types/brainstorm'
+import { useAuthStore } from './useAuthStore'
 
 interface BrainstormState {
   notes: StickyNote[]
@@ -21,6 +22,7 @@ function pbToNote(r: any): StickyNote {
     tags: Array.isArray(r.tags) ? r.tags : [],
     position: { x: r.posX ?? 100, y: r.posY ?? 100 },
     size: r.size ?? undefined,
+    createdBy: r.createdBy || undefined,
     createdAt: r.created,
   }
 }
@@ -41,6 +43,8 @@ export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
   },
 
   addNote: async (content, color, tags) => {
+    const user = useAuthStore.getState().user
+    const createdBy = user?.name || user?.email || undefined
     const tempId = `temp_${crypto.randomUUID()}`
     const pos = { x: Math.random() * 400 + 40, y: Math.random() * 200 + 40 }
     const optimistic: StickyNote = {
@@ -49,6 +53,7 @@ export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
       color,
       tags: tags ?? [],
       position: pos,
+      createdBy,
       createdAt: new Date().toISOString(),
     }
     set((s) => ({ notes: [...s.notes, optimistic] }))
@@ -62,6 +67,7 @@ export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
           tags: tags ?? [],
           posX: pos.x,
           posY: pos.y,
+          createdBy: createdBy ?? '',
         }),
       })
       const item = await res.json()

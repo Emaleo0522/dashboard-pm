@@ -21,7 +21,7 @@ function parseICSDate(value: string): Date | null {
   return null
 }
 
-function parseICS(text: string): CalendarMeeting[] {
+function parseICS(text: string, includeAll = false): CalendarMeeting[] {
   const now = new Date()
   const results: CalendarMeeting[] = []
 
@@ -56,8 +56,8 @@ function parseICS(text: string): CalendarMeeting[] {
       const startDate = parseICSDate(dtstart)
       if (!startDate) continue
 
-      // Only past events
-      if (startDate >= now) continue
+      // Only past events (skip filter when includeAll)
+      if (!includeAll && startDate >= now) continue
 
       const endDate = dtend ? parseICSDate(dtend) : undefined
 
@@ -107,13 +107,18 @@ function parseICS(text: string): CalendarMeeting[] {
     }
   }
 
-  // Sort by date descending (most recent first) and limit to 30
+  if (includeAll) {
+    results.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    return results
+  }
   results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   return results.slice(0, 30)
 }
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const url = new URL(req.url).searchParams.get('url')
+  const searchParams = new URL(req.url).searchParams
+  const url = searchParams.get('url')
+  const all = searchParams.get('all') === 'true'
 
   if (!url) {
     return NextResponse.json({ ok: false, error: 'URL no configurada' })
@@ -130,7 +135,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     }
 
     const text = await response.text()
-    const meetings = parseICS(text)
+    const meetings = parseICS(text, all)
 
     return NextResponse.json({ ok: true, meetings })
   } catch (err: unknown) {
