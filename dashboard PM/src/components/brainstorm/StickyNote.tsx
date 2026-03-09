@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { X } from 'lucide-react'
 import { useBrainstormStore } from '@/store/useBrainstormStore'
 import { useBacklogStore } from '@/store/useBacklogStore'
@@ -28,6 +28,7 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
   const { updateNote, deleteNote } = useBrainstormStore()
   const { addCard } = useBacklogStore()
   const colors = COLOR_STYLES[note.color] || COLOR_STYLES.indigo
+  const editContainerRef = useRef<HTMLDivElement>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (editing) return
@@ -79,12 +80,18 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
 
       {/* Content */}
       {editing ? (
-        <>
+        <div
+          ref={editContainerRef}
+          onBlur={(e) => {
+            if (!editContainerRef.current?.contains(e.relatedTarget as Node)) {
+              saveContent()
+            }
+          }}
+        >
           <textarea
             autoFocus
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            onBlur={saveContent}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && e.metaKey) saveContent()
               if (e.key === 'Escape') cancelEditing()
@@ -138,7 +145,7 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
               +
             </button>
           </div>
-        </>
+        </div>
       ) : (
         <p
           className={cn('text-sm leading-relaxed', colors.text)}
@@ -159,7 +166,7 @@ export function StickyNote({ note, onDragStart }: StickyNoteProps) {
 
       {/* Send to Backlog button */}
       <button
-        onClick={(e) => { e.stopPropagation(); addCard({ title: note.content, columnId: 'raw' }) }}
+        onClick={(e) => { e.stopPropagation(); addCard({ title: note.content, columnId: 'raw', tags: tags }) }}
         onMouseDown={(e) => e.stopPropagation()}
         className="mt-2 w-full opacity-0 group-hover:opacity-100 text-xs bg-white/10 text-white/70 hover:bg-white/20 hover:text-white px-2 py-1 rounded transition-all"
       >
