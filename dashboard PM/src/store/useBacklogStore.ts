@@ -51,7 +51,7 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
       let hasMore = true
 
       while (hasMore) {
-        const res = await fetch(`/api/pb/backlog_cards?perPage=${perPage}&page=${page}&sort=-created`)
+        const res = await fetch(`/api/pb/backlog_cards?perPage=${perPage}&page=${page}&sort=-id`)
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         if (!data.items) throw new Error('Unexpected response shape')
