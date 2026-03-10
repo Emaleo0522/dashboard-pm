@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PB = process.env.POCKETBASE_URL ?? 'http://161.153.203.83:8090'
+const PB = process.env.POCKETBASE_URL
 
 export async function POST(req: NextRequest) {
+  if (!PB) {
+    return NextResponse.json({ error: 'Servidor no configurado' }, { status: 503 })
+  }
   const { email, password } = await req.json()
 
   const res = await fetch(`${PB}/api/collections/users/auth-with-password`, {

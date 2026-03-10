@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MoreHorizontal, Zap, Archive, Trash2, CheckCircle2, Layers, Lightbulb } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { useInboxStore } from '@/store/useInboxStore'
@@ -19,6 +19,26 @@ export function EntryCard({ entry }: EntryCardProps) {
   const [linearLoading, setLinearLoading] = useState(false)
   const [linearError, setLinearError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close menu with Escape or click outside
+  useEffect(() => {
+    if (!menuOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false)
+    }
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [menuOpen])
 
   const { updateStatus, deleteEntry } = useInboxStore()
   const addBacklogCard = useBacklogStore((s) => s.addCard)
@@ -55,13 +75,13 @@ export function EntryCard({ entry }: EntryCardProps) {
         body: JSON.stringify({ title: entry.content }),
       })
       const data = await res.json() as { ok: boolean; error?: string }
-      updateStatus(entry.id, 'converted')
-      if (!data.ok) {
-        setLinearError('Creado localmente. Linear: ' + (data.error ?? 'sin API key'))
+      if (data.ok) {
+        updateStatus(entry.id, 'converted')
+      } else {
+        setLinearError('No se pudo crear en Linear: ' + (data.error ?? 'sin API key'))
       }
     } catch {
-      updateStatus(entry.id, 'converted')
-      setLinearError('Creado localmente. No se pudo conectar a Linear.')
+      setLinearError('No se pudo conectar a Linear.')
     } finally {
       setLinearLoading(false)
     }
@@ -105,7 +125,7 @@ export function EntryCard({ entry }: EntryCardProps) {
         </div>
 
         {/* Acciones */}
-        <div className="relative">
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
             className="opacity-0 group-hover:opacity-100 p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-overlay transition-all"
@@ -115,7 +135,6 @@ export function EntryCard({ entry }: EntryCardProps) {
           {menuOpen && (
             <div
               className="absolute right-0 top-6 z-20 bg-surface-overlay border border-border rounded-card shadow-xl py-1 w-44"
-              onMouseLeave={() => setMenuOpen(false)}
             >
               {entry.status !== 'classified' && (
                 <MenuItem icon={<CheckCircle2 size={13} />} label="Marcar clasificada" onClick={() => { updateStatus(entry.id, 'classified'); setMenuOpen(false) }} />

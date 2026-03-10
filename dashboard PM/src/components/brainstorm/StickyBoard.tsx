@@ -7,7 +7,7 @@ import { useBrainstormStore } from '@/store/useBrainstormStore'
 import type { NoteColor } from '@/types/brainstorm'
 
 export function StickyBoard() {
-  const { notes, addNote, moveNote } = useBrainstormStore()
+  const { notes, addNote, moveNote, saveMoveNote } = useBrainstormStore()
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
   const [createColor, setCreateColor] = useState<NoteColor>('indigo')
   const boardRef = useRef<HTMLDivElement>(null)
@@ -33,8 +33,11 @@ export function StickyBoard() {
   }, [moveNote])
 
   const handleMouseUp = useCallback(() => {
-    dragging.current = null
-  }, [])
+    if (dragging.current) {
+      saveMoveNote(dragging.current.id)
+      dragging.current = null
+    }
+  }, [saveMoveNote])
 
   const handleAddNote = () => {
     addNote('Nueva idea...', createColor)

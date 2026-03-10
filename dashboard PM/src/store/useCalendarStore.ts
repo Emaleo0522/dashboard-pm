@@ -98,6 +98,7 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
   },
 
   updateEvent: (id, updates) => {
+    const prev = get().events.find((e) => e.id === id)
     set((s) => ({
       events: s.events.map((e) => (e.id === id ? { ...e, ...updates } : e)),
     }))
@@ -105,11 +106,20 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    }).catch(() => {})
+    }).catch(() => {
+      if (prev) {
+        set((s) => ({ events: s.events.map((e) => (e.id === id ? prev : e)) }))
+      }
+    })
   },
 
   deleteEvent: (id) => {
+    const prev = get().events.find((e) => e.id === id)
     set((s) => ({ events: s.events.filter((e) => e.id !== id) }))
-    fetch(`/api/pb/calendar_events/${id}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`/api/pb/calendar_events/${id}`, { method: 'DELETE' }).catch(() => {
+      if (prev) {
+        set((s) => ({ events: [...s.events, prev] }))
+      }
+    })
   },
 }))

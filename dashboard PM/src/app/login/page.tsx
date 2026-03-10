@@ -35,6 +35,7 @@ export default function LoginPage() {
       router.push('/')
     } catch {
       setError('Error de conexión. Intentá de nuevo.')
+    } finally {
       setLoading(false)
     }
   }

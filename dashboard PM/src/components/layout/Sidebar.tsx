@@ -4,7 +4,11 @@ import { Inbox, Lightbulb, Kanban, Zap, History, Settings, Layers, Calendar, Log
 import { useInboxStore } from '@/store/useInboxStore'
 import { useAuthStore } from '@/store/useAuthStore'
 
-export function Sidebar() {
+interface SidebarProps {
+  onNavigate?: () => void
+}
+
+export function Sidebar({ onNavigate }: SidebarProps) {
   const entries = useInboxStore((s) => s.entries)
   const unprocessedCount = entries.filter((e) => e.status === 'unprocessed').length
   const user = useAuthStore((s) => s.user)
@@ -27,22 +31,22 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-        <SidebarItem href="/inbox" icon={Inbox} label="Inbox" badge={unprocessedCount} />
-        <SidebarItem href="/brainstorm" icon={Lightbulb} label="Brainstorm" />
-        <SidebarItem href="/backlog" icon={Kanban} label="Backlog Estratégico" />
-        <SidebarItem href="/linear-sync" icon={Zap} label="Linear Sync" />
-        <SidebarItem href="/history" icon={History} label="Historial" />
+        <SidebarItem href="/inbox" icon={Inbox} label="Inbox" badge={unprocessedCount} onClick={onNavigate} />
+        <SidebarItem href="/brainstorm" icon={Lightbulb} label="Brainstorm" onClick={onNavigate} />
+        <SidebarItem href="/backlog" icon={Kanban} label="Backlog Estratégico" onClick={onNavigate} />
+        <SidebarItem href="/linear-sync" icon={Zap} label="Linear Sync" onClick={onNavigate} />
+        <SidebarItem href="/history" icon={History} label="Historial" onClick={onNavigate} />
 
         {/* Separador sección personal */}
         <div className="pt-2 pb-1 px-2">
           <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">Personal</p>
         </div>
-        <SidebarItem href="/calendar" icon={Calendar} label="Mi Calendario" />
+        <SidebarItem href="/calendar" icon={Calendar} label="Mi Calendario" onClick={onNavigate} />
       </nav>
 
       {/* Bottom: settings + user */}
       <div className="px-2 py-3 border-t border-border space-y-0.5">
-        <SidebarItem href="/settings" icon={Settings} label="Settings" />
+        <SidebarItem href="/settings" icon={Settings} label="Settings" onClick={onNavigate} />
 
         {user && (
           <div className="flex items-center gap-2 px-2 py-2 mt-1">

@@ -105,6 +105,7 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
   },
 
   updateStatus: (id, status) => {
+    const prev = get().entries.find((e) => e.id === id)
     set((s) => ({
       entries: s.entries.map((e) => (e.id === id ? { ...e, status } : e)),
     }))
@@ -112,11 +113,24 @@ export const useInboxStore = create<InboxState>()((set, get) => ({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
-    }).catch(() => {})
+    }).catch(() => {
+      // Rollback on failure
+      if (prev) {
+        set((s) => ({
+          entries: s.entries.map((e) => (e.id === id ? { ...e, status: prev.status } : e)),
+        }))
+      }
+    })
   },
 
   deleteEntry: (id) => {
+    const prev = get().entries.find((e) => e.id === id)
     set((s) => ({ entries: s.entries.filter((e) => e.id !== id) }))
-    fetch(`/api/pb/inbox_entries/${id}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`/api/pb/inbox_entries/${id}`, { method: 'DELETE' }).catch(() => {
+      // Rollback on failure
+      if (prev) {
+        set((s) => ({ entries: [...s.entries, prev] }))
+      }
+    })
   },
 }))

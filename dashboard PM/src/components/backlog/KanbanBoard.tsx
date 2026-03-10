@@ -10,6 +10,7 @@ import type { KanbanColumnId } from '@/types/backlog'
 
 export function KanbanBoard() {
   const { cards, moveCard } = useBacklogStore()
+  const isLoaded = useBacklogStore((s) => s.isLoaded)
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -39,6 +40,28 @@ export function KanbanBoard() {
   }
 
   const activeCard = cards.find((c) => c.id === activeId)
+
+  if (!isLoaded) {
+    return (
+      <div className="flex gap-4 pb-4">
+        {KANBAN_COLUMNS.map((col) => (
+          <div key={col.id} className="w-64 shrink-0">
+            <div className="px-1 mb-2.5">
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{col.label}</span>
+            </div>
+            <div className="space-y-2 rounded-card p-2 bg-surface-raised/30">
+              {[1, 2].map((n) => (
+                <div key={n} className="bg-surface-secondary border border-border rounded-lg p-3 animate-pulse">
+                  <div className="h-4 bg-surface-overlay rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-surface-overlay rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

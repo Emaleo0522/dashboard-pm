@@ -9,6 +9,7 @@ interface BrainstormState {
   addNote: (content: string, color: NoteColor, tags?: string[]) => Promise<void>
   updateNote: (id: string, updates: Partial<StickyNote>) => void
   moveNote: (id: string, position: { x: number; y: number }) => void
+  saveMoveNote: (id: string) => void
   deleteNote: (id: string) => void
   resizeNote: (id: string, size: { width: number; height: number }) => void
 }
@@ -82,6 +83,7 @@ export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
   },
 
   updateNote: (id, updates) => {
+    const prev = get().notes.find((n) => n.id === id)
     set((s) => ({
       notes: s.notes.map((n) => (n.id === id ? { ...n, ...updates } : n)),
     }))
@@ -95,26 +97,42 @@ export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(pbUpdates),
-    }).catch(() => {})
+    }).catch(() => {
+      if (prev) {
+        set((s) => ({ notes: s.notes.map((n) => (n.id === id ? prev : n)) }))
+      }
+    })
   },
 
   moveNote: (id, position) => {
+    // moveNote is called rapidly during drag — rollback deferred to dragEnd via saveMoveNote
     set((s) => ({
       notes: s.notes.map((n) => (n.id === id ? { ...n, position } : n)),
     }))
+  },
+
+  saveMoveNote: (id) => {
+    const note = get().notes.find((n) => n.id === id)
+    if (!note) return
     fetch(`/api/pb/brainstorm_notes/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ posX: position.x, posY: position.y }),
+      body: JSON.stringify({ posX: note.position.x, posY: note.position.y }),
     }).catch(() => {})
   },
 
   deleteNote: (id) => {
+    const prev = get().notes.find((n) => n.id === id)
     set((s) => ({ notes: s.notes.filter((n) => n.id !== id) }))
-    fetch(`/api/pb/brainstorm_notes/${id}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`/api/pb/brainstorm_notes/${id}`, { method: 'DELETE' }).catch(() => {
+      if (prev) {
+        set((s) => ({ notes: [...s.notes, prev] }))
+      }
+    })
   },
 
   resizeNote: (id, size) => {
+    const prev = get().notes.find((n) => n.id === id)
     set((s) => ({
       notes: s.notes.map((n) => (n.id === id ? { ...n, size } : n)),
     }))
@@ -122,6 +140,10 @@ export const useBrainstormStore = create<BrainstormState>()((set, get) => ({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ size }),
-    }).catch(() => {})
+    }).catch(() => {
+      if (prev) {
+        set((s) => ({ notes: s.notes.map((n) => (n.id === id ? prev : n)) }))
+      }
+    })
   },
 }))

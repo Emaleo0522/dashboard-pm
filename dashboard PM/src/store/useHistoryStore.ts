@@ -18,6 +18,7 @@ function pbToMeeting(r: any): Meeting {
     title: r.title,
     date: r.date,
     summary: r.summary || '',
+    participants: Array.isArray(r.participants) ? r.participants : undefined,
     decisions: Array.isArray(r.decisions) ? r.decisions : [],
     actions: Array.isArray(r.actions) ? r.actions : [],
     tags: Array.isArray(r.tags) ? r.tags : [],
@@ -55,6 +56,7 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
           title: meeting.title,
           date: meeting.date,
           summary: meeting.summary,
+          participants: meeting.participants ?? [],
           decisions: meeting.decisions,
           actions: meeting.actions,
           tags: meeting.tags,
@@ -71,6 +73,7 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
   },
 
   updateMeeting: (id, updates) => {
+    const prev = get().meetings.find((m) => m.id === id)
     set((s) => ({
       meetings: s.meetings.map((m) => (m.id === id ? { ...m, ...updates } : m)),
     }))
@@ -78,11 +81,20 @@ export const useHistoryStore = create<HistoryState>()((set, get) => ({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    }).catch(() => {})
+    }).catch(() => {
+      if (prev) {
+        set((s) => ({ meetings: s.meetings.map((m) => (m.id === id ? prev : m)) }))
+      }
+    })
   },
 
   deleteMeeting: (id) => {
+    const prev = get().meetings.find((m) => m.id === id)
     set((s) => ({ meetings: s.meetings.filter((m) => m.id !== id) }))
-    fetch(`/api/pb/meeting_history/${id}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`/api/pb/meeting_history/${id}`, { method: 'DELETE' }).catch(() => {
+      if (prev) {
+        set((s) => ({ meetings: [...s.meetings, prev] }))
+      }
+    })
   },
 }))

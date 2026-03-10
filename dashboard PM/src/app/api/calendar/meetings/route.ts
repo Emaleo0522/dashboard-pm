@@ -2,8 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import type { CalendarMeeting } from '@/types/history'
 
 function parseICSDate(value: string): Date | null {
-  // Remove any TZID prefix: "TZID=America/Buenos_Aires:20260308T100000" → "20260308T100000"
-  const raw = value.includes(':') ? value.split(':').pop()! : value
+  // Extract the date/time portion. DTSTART value may contain TZID params like:
+  // "TZID=America/Buenos_Aires:20260308T100000" or just "20260308T100000Z"
+  // Use a regex to find the date/time pattern directly, which is more robust
+  // than splitting on ":" (since TZID values can theoretically contain colons)
+  const dateMatch = value.match(/(\d{8}(?:T\d{6})?Z?)/)
+  const raw = dateMatch ? dateMatch[1] : (value.includes(':') ? value.split(':').pop()! : value)
 
   // Format: 20260308T100000Z or 20260308T100000 or 20260308
   const fullMatch = raw.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/)
@@ -115,6 +119,26 @@ function parseICS(text: string, includeAll = false): CalendarMeeting[] {
   return results.slice(0, 30)
 }
 
+const ALLOWED_CALENDAR_HOSTS = [
+  'calendar.google.com',
+  'www.google.com',
+  'outlook.office365.com',
+  'outlook.live.com',
+  'p.]calendar.yahoo.com',
+]
+
+function isAllowedCalendarUrl(urlStr: string): boolean {
+  try {
+    const parsed = new URL(urlStr)
+    // Must be HTTPS
+    if (parsed.protocol !== 'https:') return false
+    // Must be a known calendar host
+    return ALLOWED_CALENDAR_HOSTS.some(host => parsed.hostname === host || parsed.hostname.endsWith('.' + host))
+  } catch {
+    return false
+  }
+}
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const searchParams = new URL(req.url).searchParams
   const url = searchParams.get('url')
@@ -122,6 +146,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   if (!url) {
     return NextResponse.json({ ok: false, error: 'URL no configurada' })
+  }
+
+  if (!isAllowedCalendarUrl(url)) {
+    return NextResponse.json({ ok: false, error: 'URL no permitida. Solo se aceptan URLs de Google Calendar, Outlook o Yahoo Calendar.' }, { status: 400 })
   }
 
   try {

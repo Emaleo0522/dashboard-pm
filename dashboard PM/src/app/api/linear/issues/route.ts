@@ -17,11 +17,11 @@ export async function GET() {
     const { getTeamIssues } = await import('@/lib/linear-queries')
     const issues = await getTeamIssues(teamId)
     return NextResponse.json({ issues, mock: false })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
+  } catch (e: unknown) {
     const activeIssues = mockLinearIssues.filter(
       (issue) => issue.state.type !== 'completed' && issue.state.type !== 'cancelled'
     )
-    return NextResponse.json({ issues: activeIssues, mock: true, error: e.message })
+    const message = e instanceof Error ? e.message : 'Error connecting to Linear'
+    return NextResponse.json({ issues: activeIssues, mock: true, error: message })
   }
 }

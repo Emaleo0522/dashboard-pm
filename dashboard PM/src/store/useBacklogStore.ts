@@ -97,6 +97,7 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
   },
 
   updateCard: (id, updates) => {
+    const prev = get().cards.find((c) => c.id === id)
     set((s) => ({
       cards: s.cards.map((c) =>
         c.id === id ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
@@ -106,10 +107,15 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    }).catch(() => {})
+    }).catch(() => {
+      if (prev) {
+        set((s) => ({ cards: s.cards.map((c) => (c.id === id ? prev : c)) }))
+      }
+    })
   },
 
   moveCard: (id, columnId) => {
+    const prev = get().cards.find((c) => c.id === id)
     set((s) => ({
       cards: s.cards.map((c) =>
         c.id === id ? { ...c, columnId, updatedAt: new Date().toISOString() } : c
@@ -119,11 +125,20 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ columnId }),
-    }).catch(() => {})
+    }).catch(() => {
+      if (prev) {
+        set((s) => ({ cards: s.cards.map((c) => (c.id === id ? prev : c)) }))
+      }
+    })
   },
 
   deleteCard: (id) => {
+    const prev = get().cards.find((c) => c.id === id)
     set((s) => ({ cards: s.cards.filter((c) => c.id !== id) }))
-    fetch(`/api/pb/backlog_cards/${id}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`/api/pb/backlog_cards/${id}`, { method: 'DELETE' }).catch(() => {
+      if (prev) {
+        set((s) => ({ cards: [...s.cards, prev] }))
+      }
+    })
   },
 }))

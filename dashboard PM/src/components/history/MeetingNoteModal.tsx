@@ -60,10 +60,12 @@ export function MeetingNoteModal({ open, onClose, calendarMeeting }: MeetingNote
   const handleSubmit = () => {
     if (!calendarMeeting || !title.trim()) return
 
+    const participantsList = participants.split(',').map((p) => p.trim()).filter(Boolean)
     addMeeting({
       title: title.trim(),
       date: calendarMeeting.date,
       summary: summary.trim(),
+      participants: participantsList.length > 0 ? participantsList : undefined,
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
       decisions: decisions
         .filter((d) => d.text.trim())

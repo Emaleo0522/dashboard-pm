@@ -14,6 +14,9 @@ const config: Config = {
           DEFAULT: '#0a0a0b',
           raised: '#111113',
           overlay: '#18181b',
+          2: '#151517',
+          secondary: '#111113',
+          tertiary: '#1a1a1d',
         },
         border: {
           DEFAULT: '#27272a',
@@ -29,6 +32,9 @@ const config: Config = {
           hover: '#818cf8',
           dim: 'rgba(99,102,241,0.12)',
         },
+        brand: {
+          primary: '#6366f1',
+        },
         status: {
           unprocessed: '#71717a',
           classified: '#3b82f6',
@@ -43,8 +49,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-jetbrains-mono)', 'monospace'],
       },
       borderRadius: {
         card: '8px',

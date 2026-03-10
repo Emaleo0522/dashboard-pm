@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PB = process.env.POCKETBASE_URL ?? 'http://161.153.203.83:8090'
+const PB = process.env.POCKETBASE_URL
+if (!PB) {
+  console.error('[PB proxy] POCKETBASE_URL env var is not set!')
+}
+
+const ALLOWED_COLLECTIONS = new Set([
+  'inbox_entries',
+  'brainstorm_notes',
+  'backlog_cards',
+  'calendar_events',
+  'meeting_history',
+])
 
 function getToken(req: NextRequest): string | null {
   const cookie = req.cookies.get('pb_auth')?.value
@@ -13,6 +24,12 @@ export async function PATCH(
   { params }: { params: Promise<{ collection: string; id: string }> }
 ) {
   const { collection, id } = await params
+  if (!ALLOWED_COLLECTIONS.has(collection)) {
+    return NextResponse.json({ error: 'Collection not allowed' }, { status: 403 })
+  }
+  if (!PB) {
+    return NextResponse.json({ error: 'PocketBase not configured' }, { status: 503 })
+  }
   const body = await req.json()
   const token = getToken(req)
   try {
@@ -42,6 +59,12 @@ export async function DELETE(
   { params }: { params: Promise<{ collection: string; id: string }> }
 ) {
   const { collection, id } = await params
+  if (!ALLOWED_COLLECTIONS.has(collection)) {
+    return NextResponse.json({ error: 'Collection not allowed' }, { status: 403 })
+  }
+  if (!PB) {
+    return NextResponse.json({ error: 'PocketBase not configured' }, { status: 503 })
+  }
   const token = getToken(req)
   try {
     const res = await fetch(`${PB}/api/collections/${collection}/records/${id}`, {

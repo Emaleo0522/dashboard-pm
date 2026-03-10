@@ -95,8 +95,8 @@ Los tags deben ser 1-3 palabras en español, relevantes al dominio del producto.
       tags: Array.isArray(parsed.tags) ? parsed.tags.slice(0, 3) : [],
       reasoning: parsed.reasoning || '',
     })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (e: any) {
-    return NextResponse.json({ ok: false, error: e.message }, { status: 500 })
+  } catch (e: unknown) {
+    console.error('[AI classify] unexpected error:', e)
+    return NextResponse.json({ ok: false, error: 'Error interno al procesar la clasificación' }, { status: 500 })
   }
 }

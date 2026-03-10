@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const PB = process.env.POCKETBASE_URL ?? 'http://161.153.203.83:8090'
+const PB = process.env.POCKETBASE_URL
 
 export async function GET(req: NextRequest) {
   const cookie = req.cookies.get('pb_auth')?.value
@@ -8,6 +8,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const { token, user: cookieUser } = JSON.parse(cookie)
+
+    if (!PB) {
+      // fallback: datos del cookie sin googleCalendarUrl
+      return NextResponse.json({ user: { ...cookieUser, googleCalendarUrl: '' } })
+    }
 
     const res = await fetch(`${PB}/api/collections/users/records/${cookieUser.id}`, {
       headers: { 'Authorization': `Bearer ${token}` },

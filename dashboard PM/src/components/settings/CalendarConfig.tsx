@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -12,6 +12,11 @@ export function CalendarConfig() {
   const googleCalendarUrl = user?.googleCalendarUrl ?? ''
   const [localUrl, setLocalUrl] = useState(googleCalendarUrl)
   const [saving, setSaving] = useState(false)
+
+  // Sync localUrl when the server-side value loads/changes
+  useEffect(() => {
+    setLocalUrl(googleCalendarUrl)
+  }, [googleCalendarUrl])
   const [verifying, setVerifying] = useState(false)
   const [verifyResult, setVerifyResult] = useState<'ok' | 'error' | null>(null)
   const [verifyMsg, setVerifyMsg] = useState('')

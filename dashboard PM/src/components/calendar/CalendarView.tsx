@@ -61,15 +61,23 @@ export function CalendarView() {
   const user = useAuthStore((s) => s.user)
   const googleCalendarUrl = user?.googleCalendarUrl ?? ''
 
-  const [icsEvents, setIcsEvents] = useState<CalendarMeeting[]>([])
+  const [allIcsEvents, setAllIcsEvents] = useState<CalendarMeeting[]>([])
 
   useEffect(() => {
-    if (!googleCalendarUrl) { setIcsEvents([]); return }
+    if (!googleCalendarUrl) { setAllIcsEvents([]); return }
     fetch(`/api/calendar/meetings?url=${encodeURIComponent(googleCalendarUrl)}&all=true`)
       .then(r => r.json())
-      .then(data => { if (data.ok) setIcsEvents(data.meetings) })
+      .then(data => { if (data.ok) setAllIcsEvents(data.meetings) })
       .catch(() => {})
   }, [googleCalendarUrl])
+
+  // Filter ICS events to current month +/- 1 month for performance
+  const icsEvents = allIcsEvents.filter((e) => {
+    const eventDate = new Date(e.date)
+    const start = new Date(year, month - 1, 1)
+    const end = new Date(year, month + 2, 0)
+    return eventDate >= start && eventDate <= end
+  })
 
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())

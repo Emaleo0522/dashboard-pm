@@ -9,15 +9,17 @@ interface SidebarItemProps {
   icon: LucideIcon
   label: string
   badge?: number
+  onClick?: () => void
 }
 
-export function SidebarItem({ href, icon: Icon, label, badge }: SidebarItemProps) {
+export function SidebarItem({ href, icon: Icon, label, badge, onClick }: SidebarItemProps) {
   const pathname = usePathname()
   const isActive = pathname === href || pathname.startsWith(href + '/')
 
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-card text-sm transition-all duration-150 group',
         isActive

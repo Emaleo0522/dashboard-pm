@@ -17,6 +17,7 @@ export interface Meeting {
   title: string
   date: string
   summary: string
+  participants?: string[]
   decisions: MeetingDecision[]
   actions: MeetingAction[]
   tags: string[]
