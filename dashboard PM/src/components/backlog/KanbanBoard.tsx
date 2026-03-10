@@ -1,20 +1,94 @@
 'use client'
-import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import {
+  DndContext,
+  DragOverlay,
+  rectIntersection,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  MeasuringStrategy,
+} from '@dnd-kit/core'
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import { useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import { KanbanColumn } from './KanbanColumn'
 import { KanbanCard } from './KanbanCard'
 import { useBacklogStore } from '@/store/useBacklogStore'
 import { KANBAN_COLUMNS } from '@/types/backlog'
 import type { KanbanColumnId } from '@/types/backlog'
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
+
+const MIN_ZOOM = 0.3
+const MAX_ZOOM = 1.5
+const ZOOM_STEP = 0.1
+
+export interface ColumnFilters {
+  tags: string[]
+  keyword: string
+  author: string
+}
+
+const emptyFilters: ColumnFilters = { tags: [], keyword: '', author: '' }
 
 export function KanbanBoard() {
   const { cards, moveCard } = useBacklogStore()
   const isLoaded = useBacklogStore((s) => s.isLoaded)
   const [activeId, setActiveId] = useState<string | null>(null)
 
+  // Canvas state
+  const [zoom, setZoom] = useState(0.85)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const [isPanning, setIsPanning] = useState(false)
+  const panStartRef = useRef({ x: 0, y: 0 })
+  const panOriginRef = useRef({ x: 0, y: 0 })
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Per-column filters
+  const [filters, setFilters] = useState<Record<string, ColumnFilters>>({})
+
+  const getFilters = (colId: string): ColumnFilters => filters[colId] || emptyFilters
+
+  const updateFilter = useCallback((colId: string, partial: Partial<ColumnFilters>) => {
+    setFilters((prev) => ({
+      ...prev,
+      [colId]: { ...(prev[colId] || emptyFilters), ...partial },
+    }))
+  }, [])
+
+  // Get all unique tags and authors for filter options
+  const allTags = Array.from(new Set(cards.flatMap((c) => c.tags || [])))
+  const allAuthors = Array.from(new Set(cards.map((c) => c.createdBy).filter(Boolean) as string[]))
+
+  // Filter cards for a column
+  const getFilteredCards = useCallback(
+    (colId: KanbanColumnId) => {
+      const colCards = cards.filter((c) => c.columnId === colId)
+      const f = getFilters(colId)
+
+      return colCards.filter((card) => {
+        // Tag filter
+        if (f.tags.length > 0) {
+          const cardTags = card.tags || []
+          if (!f.tags.some((t) => cardTags.includes(t))) return false
+        }
+        // Keyword filter
+        if (f.keyword) {
+          const kw = f.keyword.toLowerCase()
+          const inTitle = card.title.toLowerCase().includes(kw)
+          const inDesc = card.description?.toLowerCase().includes(kw) || false
+          const inTags = (card.tags || []).some((t) => t.toLowerCase().includes(kw))
+          if (!inTitle && !inDesc && !inTags) return false
+        }
+        // Author filter
+        if (f.author && card.createdBy !== f.author) return false
+        return true
+      })
+    },
+    [cards, filters] // eslint-disable-line react-hooks/exhaustive-deps
+  )
+
+  // DnD sensors - increase distance to not conflict with panning
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } })
   )
 
   const handleDragStart = (e: DragStartEvent) => setActiveId(String(e.active.id))
@@ -32,26 +106,94 @@ export function KanbanBoard() {
       return
     }
 
-    // Dropped over a card — find that card's column
+    // Dropped over a card -- find that card's column
     const targetCard = cards.find((c) => c.id === overId)
-    if (targetCard && targetCard.columnId !== cards.find((c) => c.id === String(active.id))?.columnId) {
-      moveCard(String(active.id), targetCard.columnId)
+    if (targetCard) {
+      const sourceCard = cards.find((c) => c.id === String(active.id))
+      if (sourceCard && targetCard.columnId !== sourceCard.columnId) {
+        moveCard(String(active.id), targetCard.columnId)
+      }
     }
   }
 
   const activeCard = cards.find((c) => c.id === activeId)
 
+  // Zoom with mouse wheel
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      if (activeId) return // Don't zoom while dragging
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
+      setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z + delta)))
+    },
+    [activeId]
+  )
+
+  // Pan with middle mouse or right click + drag
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      // Middle button (1) or Space+Left click -> pan
+      if (e.button === 1 || (e.button === 0 && e.altKey)) {
+        e.preventDefault()
+        setIsPanning(true)
+        panStartRef.current = { x: e.clientX, y: e.clientY }
+        panOriginRef.current = { ...pan }
+      }
+    },
+    [pan]
+  )
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isPanning) return
+      const dx = e.clientX - panStartRef.current.x
+      const dy = e.clientY - panStartRef.current.y
+      setPan({
+        x: panOriginRef.current.x + dx,
+        y: panOriginRef.current.y + dy,
+      })
+    },
+    [isPanning]
+  )
+
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false)
+  }, [])
+
+  // Handle mouse leave
+  useEffect(() => {
+    const handleGlobalUp = () => setIsPanning(false)
+    window.addEventListener('mouseup', handleGlobalUp)
+    return () => window.removeEventListener('mouseup', handleGlobalUp)
+  }, [])
+
+  const resetView = () => {
+    setZoom(0.85)
+    setPan({ x: 0, y: 0 })
+  }
+
+  const measuring = {
+    droppable: {
+      strategy: MeasuringStrategy.Always,
+    },
+  }
+
   if (!isLoaded) {
     return (
       <div className="flex gap-4 pb-4">
         {KANBAN_COLUMNS.map((col) => (
-          <div key={col.id} className="w-64 shrink-0">
+          <div key={col.id} className="w-72 shrink-0">
             <div className="px-1 mb-2.5">
-              <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">{col.label}</span>
+              <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                {col.label}
+              </span>
             </div>
             <div className="space-y-2 rounded-card p-2 bg-surface-raised/30">
               {[1, 2].map((n) => (
-                <div key={n} className="bg-surface-secondary border border-border rounded-lg p-3 animate-pulse">
+                <div
+                  key={n}
+                  className="bg-surface-secondary border border-border rounded-lg p-3 animate-pulse"
+                >
                   <div className="h-4 bg-surface-overlay rounded w-3/4 mb-2" />
                   <div className="h-3 bg-surface-overlay rounded w-1/2" />
                 </div>
@@ -64,20 +206,97 @@ export function KanbanBoard() {
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 pb-4">
-        {KANBAN_COLUMNS.map((col) => (
-          <KanbanColumn
-            key={col.id}
-            id={col.id}
-            label={col.label}
-            cards={cards.filter((c) => c.columnId === col.id)}
-          />
-        ))}
+    <div className="relative h-[calc(100vh-160px)] overflow-hidden rounded-xl border border-border bg-surface-primary">
+      {/* Zoom controls */}
+      <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-surface-secondary/90 backdrop-blur-sm border border-border rounded-lg px-2 py-1.5 shadow-lg">
+        <button
+          onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
+          className="p-1 rounded hover:bg-surface-tertiary text-text-muted hover:text-text-primary transition-colors"
+          title="Zoom out"
+        >
+          <ZoomOut size={16} />
+        </button>
+        <span className="text-xs text-text-secondary font-mono w-12 text-center select-none">
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          onClick={() => setZoom((z) => Math.min(MAX_ZOOM, z + ZOOM_STEP))}
+          className="p-1 rounded hover:bg-surface-tertiary text-text-muted hover:text-text-primary transition-colors"
+          title="Zoom in"
+        >
+          <ZoomIn size={16} />
+        </button>
+        <div className="w-px h-4 bg-border mx-1" />
+        <button
+          onClick={resetView}
+          className="p-1 rounded hover:bg-surface-tertiary text-text-muted hover:text-text-primary transition-colors"
+          title="Reset view"
+        >
+          <Maximize2 size={16} />
+        </button>
       </div>
-      <DragOverlay>
-        {activeCard ? <KanbanCard card={activeCard} /> : null}
-      </DragOverlay>
-    </DndContext>
+
+      {/* Pan/zoom hint */}
+      <div className="absolute bottom-3 left-3 z-20 text-[10px] text-text-muted/50 select-none pointer-events-none">
+        Scroll: zoom | Alt+Drag: mover lienzo | Drag cards: mover entre columnas
+      </div>
+
+      {/* Canvas container */}
+      <div
+        ref={containerRef}
+        className={`w-full h-full ${isPanning ? 'cursor-grabbing' : ''}`}
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        style={{ touchAction: 'none' }}
+      >
+        {/* Dotted grid background */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage: `radial-gradient(circle, var(--color-border, rgba(255,255,255,0.06)) 1px, transparent 1px)`,
+            backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
+            backgroundPosition: `${pan.x}px ${pan.y}px`,
+          }}
+        />
+
+        {/* Transformed content */}
+        <div
+          className="origin-top-left h-full"
+          style={{
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+            willChange: 'transform',
+          }}
+        >
+          <DndContext
+            sensors={sensors}
+            collisionDetection={rectIntersection}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            measuring={measuring}
+          >
+            <div className="flex gap-5 p-6 min-h-full items-start">
+              {KANBAN_COLUMNS.map((col) => (
+                <KanbanColumn
+                  key={col.id}
+                  id={col.id}
+                  label={col.label}
+                  cards={getFilteredCards(col.id)}
+                  totalCards={cards.filter((c) => c.columnId === col.id).length}
+                  filters={getFilters(col.id)}
+                  onFilterChange={(partial) => updateFilter(col.id, partial)}
+                  allTags={allTags}
+                  allAuthors={allAuthors}
+                />
+              ))}
+            </div>
+            <DragOverlay dropAnimation={null}>
+              {activeCard ? <KanbanCard card={activeCard} isOverlay /> : null}
+            </DragOverlay>
+          </DndContext>
+        </div>
+      </div>
+    </div>
   )
 }

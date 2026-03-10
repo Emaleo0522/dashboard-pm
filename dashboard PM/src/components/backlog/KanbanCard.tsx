@@ -9,6 +9,7 @@ import type { BacklogCard } from '@/types/backlog'
 
 interface KanbanCardProps {
   card: BacklogCard
+  isOverlay?: boolean
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -28,7 +29,7 @@ const CARD_COLOR_STYLES: Record<string, { border: string; dot: string }> = {
 const COLOR_OPTIONS = ['indigo', 'violet', 'emerald', 'amber', 'rose'] as const
 type CardColor = typeof COLOR_OPTIONS[number]
 
-export function KanbanCard({ card }: KanbanCardProps) {
+export function KanbanCard({ card, isOverlay }: KanbanCardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
@@ -42,12 +43,17 @@ export function KanbanCard({ card }: KanbanCardProps) {
 
   const { updateCard, deleteCard } = useBacklogStore()
 
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id })
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-  }
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: card.id,
+    disabled: isOverlay,
+  })
+  const style = isOverlay
+    ? { opacity: 0.9, boxShadow: '0 8px 32px rgba(0,0,0,0.3)', transform: 'rotate(2deg)' }
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.3 : 1,
+      }
 
   const handleSave = () => {
     updateCard(card.id, { title, description, tags, color: cardColor })
@@ -91,16 +97,14 @@ export function KanbanCard({ card }: KanbanCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`bg-surface-secondary border border-border rounded-lg p-3 group relative ${
+      {...attributes}
+      {...listeners}
+      className={`bg-surface-secondary border border-border rounded-lg p-3 group relative cursor-grab active:cursor-grabbing ${
         cardColor ? `border-l-4 ${CARD_COLOR_STYLES[cardColor].border}` : ''
-      }`}
+      } ${isDragging ? 'z-50' : ''}`}
     >
-      {/* Drag handle */}
-      <div
-        {...attributes}
-        {...listeners}
-        className="absolute left-1 top-3 opacity-0 group-hover:opacity-40 cursor-grab active:cursor-grabbing"
-      >
+      {/* Drag handle indicator */}
+      <div className="absolute left-1 top-3 opacity-0 group-hover:opacity-40 pointer-events-none">
         <GripVertical size={14} className="text-text-muted" />
       </div>
 

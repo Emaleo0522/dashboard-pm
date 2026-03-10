@@ -5,21 +5,22 @@ import { HelpTooltip } from '@/components/ui/HelpTooltip'
 export default function BacklogPage() {
   return (
     <PageShell
-      title="Backlog Estratégico"
-      description="Organizá y priorizá ideas en el pipeline de producto"
+      title="Backlog Estrategico"
+      description="Organiza y prioriza ideas en el pipeline de producto"
       actions={
         <HelpTooltip
-          title="Cómo usar el Backlog"
+          title="Como usar el Backlog"
           items={[
-            { label: 'Columnas', description: 'El tablero tiene 4 etapas: Ideas → Refinando → Listo para ejecutar → Descartado.' },
-            { label: 'Mover tarjetas', description: 'Arrastrá cualquier tarjeta a otra columna para actualizar su estado.' },
-            { label: 'Nueva tarjeta', description: 'Usá el botón "+" al pie de cada columna para agregar una idea nueva.' },
-            { label: 'Prioridad', description: 'Cada tarjeta tiene un nivel de prioridad: Crítica, Alta, Media o Baja.' },
+            { label: 'Lienzo', description: 'Usa scroll para zoom y Alt+Drag para mover el lienzo.' },
+            { label: 'Columnas', description: 'El tablero tiene 5 etapas: Idea cruda, Validando, Priorizar, Listo para Linear, Descartado.' },
+            { label: 'Mover tarjetas', description: 'Arrastra cualquier tarjeta a otra columna para actualizar su estado.' },
+            { label: 'Filtros', description: 'Cada columna tiene un filtro por tags, autor y palabras clave.' },
+            { label: 'Nueva tarjeta', description: 'Usa el boton "+" en el header de cada columna para agregar una idea.' },
           ]}
         />
       }
     >
-      <div className="px-8 py-6 overflow-x-auto">
+      <div className="px-4 py-2">
         <KanbanBoard />
       </div>
     </PageShell>

@@ -45,11 +45,22 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
   load: async () => {
     if (get().isLoaded) return
     try {
-      const res = await fetch('/api/pb/backlog_cards?perPage=200&sort=id')
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = await res.json()
-      if (!data.items) throw new Error('Unexpected response shape')
-      set({ cards: data.items.map(pbToCard), isLoaded: true })
+      let allItems: BacklogCard[] = []
+      let page = 1
+      const perPage = 200
+      let hasMore = true
+
+      while (hasMore) {
+        const res = await fetch(`/api/pb/backlog_cards?perPage=${perPage}&page=${page}&sort=-created`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        if (!data.items) throw new Error('Unexpected response shape')
+        allItems = [...allItems, ...data.items.map(pbToCard)]
+        hasMore = data.totalPages > page
+        page++
+      }
+
+      set({ cards: allItems, isLoaded: true })
     } catch (err) {
       console.error('[BacklogStore] load failed:', err)
     }
