@@ -22,7 +22,7 @@ interface KanbanColumnProps {
 
 type PriorityValue = '' | 'urgent' | 'high' | 'medium' | 'low'
 
-const AUTHORS = ['Ema PM', 'Anto CPO']
+const AUTHORS = ['Ema - PM', 'Anto - CPO']
 
 export function KanbanColumn({
   id,

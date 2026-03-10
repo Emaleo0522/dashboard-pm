@@ -14,6 +14,7 @@ interface AddCardData {
 interface BacklogState {
   cards: BacklogCard[]
   isLoaded: boolean
+  loadError: string | null
   load: () => Promise<void>
   addCard: (data: AddCardData) => Promise<void>
   updateCard: (id: string, updates: Partial<BacklogCard>) => void
@@ -41,9 +42,11 @@ function pbToCard(r: any): BacklogCard {
 export const useBacklogStore = create<BacklogState>()((set, get) => ({
   cards: [],
   isLoaded: false,
+  loadError: null,
 
   load: async () => {
     if (get().isLoaded) return
+    set({ loadError: null })
     try {
       let allItems: BacklogCard[] = []
       let page = 1
@@ -52,17 +55,22 @@ export const useBacklogStore = create<BacklogState>()((set, get) => ({
 
       while (hasMore) {
         const res = await fetch(`/api/pb/backlog_cards?perPage=${perPage}&page=${page}&sort=-id`)
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '')
+          throw new Error(`HTTP ${res.status}: ${errText}`)
+        }
         const data = await res.json()
-        if (!data.items) throw new Error('Unexpected response shape')
+        if (!data.items) throw new Error('Unexpected response shape: ' + JSON.stringify(data).slice(0, 200))
         allItems = [...allItems, ...data.items.map(pbToCard)]
         hasMore = data.totalPages > page
         page++
       }
 
-      set({ cards: allItems, isLoaded: true })
+      set({ cards: allItems, isLoaded: true, loadError: null })
     } catch (err) {
-      console.error('[BacklogStore] load failed:', err)
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      console.error('[BacklogStore] load failed:', msg)
+      set({ loadError: msg })
     }
   },
 

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic — never cache this route or its fetch() calls
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 const PB = process.env.POCKETBASE_URL
 if (!PB) {
   console.error('[PB proxy] POCKETBASE_URL env var is not set!')
@@ -40,6 +44,7 @@ export async function PATCH(
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(body),
+      cache: 'no-store',
     })
     if (!res.ok) {
       const errBody = await res.text()
@@ -70,6 +75,7 @@ export async function DELETE(
     const res = await fetch(`${PB}/api/collections/${collection}/records/${id}`, {
       method: 'DELETE',
       headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: 'no-store',
     })
     if (res.status === 204) return new NextResponse(null, { status: 204 })
     if (!res.ok) {

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic — never cache this route or its fetch() calls
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 const PB = process.env.POCKETBASE_URL
 if (!PB) {
   console.error('[PB proxy] POCKETBASE_URL env var is not set!')
@@ -36,10 +40,11 @@ export async function GET(
   try {
     const res = await fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: 'no-store',
     })
     if (!res.ok) {
       const errBody = await res.text()
-      console.error(`[PB proxy] GET ${collection} → ${res.status}: ${errBody}`)
+      console.error(`[PB proxy] GET ${collection} → ${res.status} | URL: ${url} | Body: ${errBody}`)
       return NextResponse.json({ error: errBody, status: res.status }, { status: res.status })
     }
     const data = await res.json()
@@ -71,6 +76,7 @@ export async function POST(
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(body),
+      cache: 'no-store',
     })
     if (!res.ok) {
       const errBody = await res.text()

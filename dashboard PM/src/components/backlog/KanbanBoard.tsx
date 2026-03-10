@@ -32,6 +32,8 @@ const emptyFilters: ColumnFilters = { tags: [], keyword: '', author: '' }
 export function KanbanBoard() {
   const { cards, moveCard } = useBacklogStore()
   const isLoaded = useBacklogStore((s) => s.isLoaded)
+  const loadError = useBacklogStore((s) => s.loadError)
+  const loadBacklog = useBacklogStore((s) => s.load)
   const [activeId, setActiveId] = useState<string | null>(null)
 
   // Canvas state
@@ -176,6 +178,26 @@ export function KanbanBoard() {
     droppable: {
       strategy: MeasuringStrategy.Always,
     },
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <div className="text-center">
+          <p className="text-sm text-red-400 font-medium mb-1">Error al cargar el backlog</p>
+          <p className="text-xs text-text-muted max-w-md">{loadError}</p>
+        </div>
+        <button
+          onClick={() => {
+            useBacklogStore.setState({ isLoaded: false, loadError: null })
+            loadBacklog()
+          }}
+          className="px-4 py-2 text-xs bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors"
+        >
+          Reintentar
+        </button>
+      </div>
+    )
   }
 
   if (!isLoaded) {
