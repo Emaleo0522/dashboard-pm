@@ -93,7 +93,7 @@ export function KanbanColumn({
 
   return (
     <div ref={setDropRef} className={cn(
-      'flex flex-col w-60 shrink-0 rounded-xl transition-all duration-150 lg:w-72',
+      'flex flex-col w-60 shrink-0 rounded-xl transition-all duration-150 lg:w-72 min-h-full',
       isOver ? 'ring-2 ring-accent/40 bg-accent-dim/20' : ''
     )}>
       {/* Header */}
@@ -202,7 +202,7 @@ export function KanbanColumn({
 
       {/* Cards area */}
       <div
-        className="flex-1 space-y-2 min-h-[200px] rounded-xl p-2.5 bg-surface-raised/30"
+        className="flex-1 space-y-2 min-h-[200px] rounded-xl p-2.5 bg-surface-raised/30 h-full"
       >
         <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
           {cards.map((card) => (

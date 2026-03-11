@@ -2,13 +2,13 @@
 import {
   DndContext,
   DragOverlay,
-  rectIntersection,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
   MeasuringStrategy,
 } from '@dnd-kit/core'
-import type { DragEndEvent, DragStartEvent, Modifier } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { KanbanColumn } from './KanbanColumn'
 import { KanbanCard } from './KanbanCard'
@@ -184,12 +184,10 @@ export function KanbanBoard() {
     },
   }
 
-  // Modifier to compensate for CSS scale on the canvas
-  const zoomModifier: Modifier = ({ transform }) => ({
-    ...transform,
-    x: transform.x / zoom,
-    y: transform.y / zoom,
-  })
+  // Custom modifier: only apply zoom compensation to sortable transforms
+  // inside the scaled container. The DragOverlay is outside the scale so it
+  // does NOT need any compensation — its coordinates are already in screen space.
+  // We intentionally do NOT pass any modifier to DndContext.
 
   if (loadError) {
     return (
@@ -303,11 +301,10 @@ export function KanbanBoard() {
         {/* DndContext wraps everything so DragOverlay can be outside the scale */}
         <DndContext
           sensors={sensors}
-          collisionDetection={rectIntersection}
+          collisionDetection={pointerWithin}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           measuring={measuring}
-          modifiers={[zoomModifier]}
         >
           {/* Transformed content */}
           <div
@@ -317,7 +314,7 @@ export function KanbanBoard() {
               willChange: 'transform',
             }}
           >
-            <div className="flex gap-3 p-4 min-h-full items-start md:gap-5 md:p-6">
+            <div className="flex gap-3 p-4 h-full items-stretch md:gap-5 md:p-6">
               {KANBAN_COLUMNS.map((col) => (
                 <KanbanColumn
                   key={col.id}
