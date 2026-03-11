@@ -8,7 +8,7 @@ import {
   useSensors,
   MeasuringStrategy,
 } from '@dnd-kit/core'
-import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent, Modifier } from '@dnd-kit/core'
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { KanbanColumn } from './KanbanColumn'
 import { KanbanCard } from './KanbanCard'
@@ -120,16 +120,20 @@ export function KanbanBoard() {
 
   const activeCard = cards.find((c) => c.id === activeId)
 
-  // Zoom with mouse wheel
-  const handleWheel = useCallback(
-    (e: React.WheelEvent) => {
+  // Zoom with mouse wheel — use native listener with { passive: false } to avoid
+  // "Unable to preventDefault inside passive event" warnings (Issue 5)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const handler = (e: WheelEvent) => {
       if (activeId) return // Don't zoom while dragging
       e.preventDefault()
       const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
       setZoom((z) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z + delta)))
-    },
-    [activeId]
-  )
+    }
+    el.addEventListener('wheel', handler, { passive: false })
+    return () => el.removeEventListener('wheel', handler)
+  }, [activeId])
 
   // Pan with middle mouse or right click + drag
   const handleMouseDown = useCallback(
@@ -180,6 +184,13 @@ export function KanbanBoard() {
     },
   }
 
+  // Modifier to compensate for CSS scale on the canvas
+  const zoomModifier: Modifier = ({ transform }) => ({
+    ...transform,
+    x: transform.x / zoom,
+    y: transform.y / zoom,
+  })
+
   if (loadError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -204,7 +215,7 @@ export function KanbanBoard() {
     return (
       <div className="flex gap-4 pb-4">
         {KANBAN_COLUMNS.map((col) => (
-          <div key={col.id} className="w-72 shrink-0">
+          <div key={col.id} className="w-60 shrink-0 md:w-72">
             <div className="px-1 mb-2.5">
               <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
                 {col.label}
@@ -230,7 +241,10 @@ export function KanbanBoard() {
   return (
     <div className="relative h-[calc(100vh-160px)] overflow-hidden rounded-xl border border-border bg-surface-primary">
       {/* Zoom controls */}
-      <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-surface-secondary/90 backdrop-blur-sm border border-border rounded-lg px-2 py-1.5 shadow-lg">
+      <div
+        className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-surface-secondary/90 backdrop-blur-sm border border-border rounded-lg px-2 py-1.5 shadow-lg"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <button
           onClick={() => setZoom((z) => Math.max(MIN_ZOOM, z - ZOOM_STEP))}
           className="p-1 rounded hover:bg-surface-tertiary text-text-muted hover:text-text-primary transition-colors"
@@ -263,11 +277,14 @@ export function KanbanBoard() {
         Scroll: zoom | Alt+Drag: mover lienzo | Drag cards: mover entre columnas
       </div>
 
+      {/* Scroll fade indicators for tablet — hint that more columns exist */}
+      <div className="absolute inset-y-0 right-0 w-12 z-10 pointer-events-none bg-gradient-to-l from-surface-primary to-transparent lg:hidden" />
+      <div className="absolute inset-y-0 left-0 w-8 z-10 pointer-events-none bg-gradient-to-r from-surface-primary to-transparent lg:hidden opacity-0 transition-opacity" />
+
       {/* Canvas container */}
       <div
         ref={containerRef}
-        className={`w-full h-full ${isPanning ? 'cursor-grabbing' : ''}`}
-        onWheel={handleWheel}
+        className={`w-full h-full overflow-x-auto ${isPanning ? 'cursor-grabbing' : ''}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -283,22 +300,24 @@ export function KanbanBoard() {
           }}
         />
 
-        {/* Transformed content */}
-        <div
-          className="origin-top-left h-full"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            willChange: 'transform',
-          }}
+        {/* DndContext wraps everything so DragOverlay can be outside the scale */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={rectIntersection}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          measuring={measuring}
+          modifiers={[zoomModifier]}
         >
-          <DndContext
-            sensors={sensors}
-            collisionDetection={rectIntersection}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            measuring={measuring}
+          {/* Transformed content */}
+          <div
+            className="origin-top-left h-full"
+            style={{
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              willChange: 'transform',
+            }}
           >
-            <div className="flex gap-5 p-6 min-h-full items-start">
+            <div className="flex gap-3 p-4 min-h-full items-start md:gap-5 md:p-6">
               {KANBAN_COLUMNS.map((col) => (
                 <KanbanColumn
                   key={col.id}
@@ -313,11 +332,15 @@ export function KanbanBoard() {
                 />
               ))}
             </div>
-            <DragOverlay dropAnimation={null}>
-              {activeCard ? <KanbanCard card={activeCard} isOverlay /> : null}
-            </DragOverlay>
-          </DndContext>
-        </div>
+          </div>
+          <DragOverlay dropAnimation={null}>
+            {activeCard ? (
+              <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
+                <KanbanCard card={activeCard} isOverlay />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
     </div>
   )

@@ -15,7 +15,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const logout = useAuthStore((s) => s.logout)
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-56 bg-surface border-r border-border flex flex-col z-40">
+    <aside className="h-screen w-56 bg-surface border-r border-border flex flex-col">
       {/* Logo */}
       <div className="px-4 py-5 border-b border-border">
         <div className="flex items-center gap-2.5">
@@ -52,7 +52,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           <div className="flex items-center gap-2 px-2 py-2 mt-1">
             <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
               <span className="text-[10px] font-semibold text-accent uppercase">
-                {(user.name || user.email).charAt(0)}
+                {(user.name || user.email || '?').charAt(0)}
               </span>
             </div>
             <div className="flex-1 min-w-0">

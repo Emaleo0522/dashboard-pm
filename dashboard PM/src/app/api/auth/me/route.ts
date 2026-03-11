@@ -7,7 +7,9 @@ export async function GET(req: NextRequest) {
   if (!cookie) return NextResponse.json({ user: null }, { status: 401 })
 
   try {
-    const { token, user: cookieUser } = JSON.parse(cookie)
+    const parsed = JSON.parse(cookie)
+    const token = parsed.token
+    const cookieUser = parsed.user || parsed.model
 
     if (!PB) {
       // fallback: datos del cookie sin googleCalendarUrl

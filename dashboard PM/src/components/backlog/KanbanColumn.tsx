@@ -41,7 +41,7 @@ export function KanbanColumn({
   const [newPriority, setNewPriority] = useState<PriorityValue>('')
   const [showFilters, setShowFilters] = useState(false)
   const addCard = useBacklogStore((s) => s.addCard)
-  const { setNodeRef, isOver } = useDroppable({ id })
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id })
 
   const parsedTags = newTagsInput
     .split(',')
@@ -92,7 +92,10 @@ export function KanbanColumn({
   }
 
   return (
-    <div className="flex flex-col w-72 shrink-0">
+    <div ref={setDropRef} className={cn(
+      'flex flex-col w-60 shrink-0 rounded-xl transition-all duration-150 lg:w-72',
+      isOver ? 'ring-2 ring-accent/40 bg-accent-dim/20' : ''
+    )}>
       {/* Header */}
       <div className="flex items-center justify-between px-1 mb-2">
         <div className="flex items-center gap-2">
@@ -197,15 +200,9 @@ export function KanbanColumn({
         </div>
       )}
 
-      {/* Cards drop zone */}
+      {/* Cards area */}
       <div
-        ref={setNodeRef}
-        className={cn(
-          'flex-1 space-y-2 min-h-[200px] rounded-xl p-2.5 transition-all duration-150',
-          isOver
-            ? 'bg-accent-dim/50 border-2 border-dashed border-accent/40 scale-[1.01]'
-            : 'bg-surface-raised/30 border-2 border-transparent'
-        )}
+        className="flex-1 space-y-2 min-h-[200px] rounded-xl p-2.5 bg-surface-raised/30"
       >
         <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
           {cards.map((card) => (
