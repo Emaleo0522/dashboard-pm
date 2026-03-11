@@ -61,6 +61,10 @@ export function CalendarView() {
   const user = useAuthStore((s) => s.user)
   const googleCalendarUrl = user?.googleCalendarUrl ?? ''
 
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth())
+
   const [allIcsEvents, setAllIcsEvents] = useState<CalendarMeeting[]>([])
 
   useEffect(() => {
@@ -78,10 +82,6 @@ export function CalendarView() {
     const end = new Date(year, month + 2, 0)
     return eventDate >= start && eventDate <= end
   })
-
-  const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth())
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState<EventFormState>(EMPTY_FORM)
