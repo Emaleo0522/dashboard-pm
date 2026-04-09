@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PM & CPO Strategy Dashboard
 
-## Getting Started
+Dashboard personal para Product Managers y CPOs. Integración con Linear para gestión de issues, Kanban drag & drop, Inbox de ideas, Brainstorm con sticky notes e Historial de reuniones.
 
-First, run the development server:
+## Demo
+
+Produccion: https://dashboard-pm-silk.vercel.app
+
+## Vistas
+
+| Vista | Funcion |
+|-------|---------|
+| Inbox | Captura rapida de ideas con clasificacion semantica |
+| Brainstorm | Board de sticky notes con tags y filtros |
+| Backlog | Kanban board con drag and drop (dnd-kit) |
+| Linear Sync | Issues de Linear en tiempo real + crear issues |
+| Historial | Registro de reuniones con busqueda semantica |
+| Calendar | Vista de calendario |
+| Settings | Configuracion Linear API y preferencias |
+
+## Stack
+
+| Capa | Tech |
+|------|------|
+| Framework | Next.js 14 + React 18 + TypeScript |
+| Estilos | Tailwind CSS dark mode |
+| Estado | Zustand 5 persist localStorage |
+| Data fetching | TanStack Query 5 |
+| Drag and drop | dnd-kit/core + sortable |
+| Animaciones | Framer Motion 11 |
+| Integracion | Linear SDK 22 server-only |
+| Deploy | Vercel |
+
+## Instalacion
+
+```bash
+cd "dashboard PM"
+npm install
+```
+
+Crear .env.local:
+
+```env
+LINEAR_API_KEY=tu_member_api_key
+LINEAR_TEAM_ID=977d7ddf-3c15-4e26-93a0-c0ef6c05c76c
+```
+
+Sin API key arranca con mock data automaticamente.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Arquitectura Linear
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+LinearClient corre exclusivamente en Route Handlers (server-only). El cliente nunca accede directamente a la API de Linear.
