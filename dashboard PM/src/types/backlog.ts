@@ -1,4 +1,11 @@
-export type KanbanColumnId = 'raw' | 'validating' | 'prioritize' | 'ready' | 'discarded'
+export type KanbanColumnId =
+  | 'raw'
+  | 'validating'
+  | 'prioritize'
+  | 'ready'
+  | 'paused'
+  | 'done'
+  | 'discarded'
 
 export interface BacklogCard {
   id: string
@@ -19,5 +26,14 @@ export const KANBAN_COLUMNS: { id: KanbanColumnId; label: string }[] = [
   { id: 'validating', label: 'Validando' },
   { id: 'prioritize', label: 'Priorizar' },
   { id: 'ready', label: 'Listo para Linear' },
+  { id: 'paused', label: 'Pausado' },
+  { id: 'done', label: 'Finalizado' },
   { id: 'discarded', label: 'Descartado' },
 ]
+
+// Layout limits for resizable columns
+export const COLUMN_MIN_WIDTH = 240
+export const COLUMN_MAX_WIDTH = 640
+export const COLUMN_DEFAULT_WIDTH = 288
+export const COLUMN_COLLAPSED_WIDTH = 56
+export const MAX_OPEN_COLUMNS = 3

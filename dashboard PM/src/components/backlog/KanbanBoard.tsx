@@ -13,13 +13,22 @@ import { useCallback, useRef, useState, useEffect } from 'react'
 import { KanbanColumn } from './KanbanColumn'
 import { KanbanCard } from './KanbanCard'
 import { useBacklogStore } from '@/store/useBacklogStore'
-import { KANBAN_COLUMNS } from '@/types/backlog'
+import {
+  KANBAN_COLUMNS,
+  COLUMN_DEFAULT_WIDTH,
+  COLUMN_MIN_WIDTH,
+  COLUMN_MAX_WIDTH,
+  MAX_OPEN_COLUMNS,
+} from '@/types/backlog'
 import type { KanbanColumnId } from '@/types/backlog'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 
 const MIN_ZOOM = 0.3
 const MAX_ZOOM = 1.5
 const ZOOM_STEP = 0.1
+
+const STORAGE_OPEN_KEY = 'backlog:open-columns'
+const STORAGE_WIDTH_KEY = 'backlog:column-widths'
 
 export interface ColumnFilters {
   tags: string[]
@@ -28,6 +37,30 @@ export interface ColumnFilters {
 }
 
 const emptyFilters: ColumnFilters = { tags: [], keyword: '', author: '' }
+
+function clamp(n: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, n))
+}
+
+function readJSON<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback
+  try {
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return fallback
+    return JSON.parse(raw) as T
+  } catch {
+    return fallback
+  }
+}
+
+function writeJSON<T>(key: string, value: T) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // localStorage full or disabled — non-critical
+  }
+}
 
 export function KanbanBoard() {
   const { cards, moveCard } = useBacklogStore()
@@ -38,6 +71,11 @@ export function KanbanBoard() {
 
   // Canvas state
   const [zoom, setZoom] = useState(0.85)
+  const zoomRef = useRef(zoom)
+  useEffect(() => {
+    zoomRef.current = zoom
+  }, [zoom])
+
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const panStartRef = useRef({ x: 0, y: 0 })
@@ -46,6 +84,79 @@ export function KanbanBoard() {
 
   // Per-column filters
   const [filters, setFilters] = useState<Record<string, ColumnFilters>>({})
+
+  // Open columns (FIFO max 3) — start collapsed, persist in localStorage
+  const [openCols, setOpenCols] = useState<KanbanColumnId[]>([])
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({})
+  const [hasHydrated, setHasHydrated] = useState(false)
+
+  useEffect(() => {
+    const validIds = new Set(KANBAN_COLUMNS.map((c) => c.id))
+    const stored = readJSON<KanbanColumnId[]>(STORAGE_OPEN_KEY, [])
+    const cleanOpen = stored
+      .filter((id): id is KanbanColumnId => validIds.has(id as KanbanColumnId))
+      .slice(0, MAX_OPEN_COLUMNS)
+    setOpenCols(cleanOpen)
+    const widths = readJSON<Record<string, number>>(STORAGE_WIDTH_KEY, {})
+    setColumnWidths(widths)
+    setHasHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hasHydrated) return
+    writeJSON(STORAGE_OPEN_KEY, openCols)
+  }, [openCols, hasHydrated])
+
+  useEffect(() => {
+    if (!hasHydrated) return
+    writeJSON(STORAGE_WIDTH_KEY, columnWidths)
+  }, [columnWidths, hasHydrated])
+
+  const isColumnOpen = useCallback(
+    (id: KanbanColumnId) => openCols.includes(id),
+    [openCols]
+  )
+
+  const toggleColumn = useCallback((id: KanbanColumnId) => {
+    setOpenCols((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((c) => c !== id)
+      }
+      const next = [...prev, id]
+      if (next.length > MAX_OPEN_COLUMNS) {
+        return next.slice(next.length - MAX_OPEN_COLUMNS)
+      }
+      return next
+    })
+  }, [])
+
+  const getColumnWidth = useCallback(
+    (id: KanbanColumnId) => columnWidths[id] ?? COLUMN_DEFAULT_WIDTH,
+    [columnWidths]
+  )
+
+  const startResize = useCallback(
+    (id: KanbanColumnId, clientX: number) => {
+      const startWidth = getColumnWidth(id)
+      const startX = clientX
+      const onMove = (ev: PointerEvent) => {
+        const dx = (ev.clientX - startX) / (zoomRef.current || 1)
+        const next = clamp(startWidth + dx, COLUMN_MIN_WIDTH, COLUMN_MAX_WIDTH)
+        setColumnWidths((prev) => ({ ...prev, [id]: next }))
+      }
+      const onUp = () => {
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        document.body.style.cursor = ''
+        document.body.style.userSelect = ''
+      }
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
+    },
+    [getColumnWidth]
+  )
 
   const getFilters = (colId: string): ColumnFilters => filters[colId] || emptyFilters
 
@@ -272,7 +383,7 @@ export function KanbanBoard() {
 
       {/* Pan/zoom hint */}
       <div className="absolute bottom-3 left-3 z-20 text-[10px] text-text-muted/50 select-none pointer-events-none">
-        Scroll: zoom | Alt+Drag: mover lienzo | Drag cards: mover entre columnas
+        Scroll: zoom | Alt+Drag: mover lienzo | Click header: expandir/colapsar (max {MAX_OPEN_COLUMNS}) | Borde derecho: redimensionar
       </div>
 
       {/* Scroll fade indicators for tablet — hint that more columns exist */}
@@ -314,7 +425,7 @@ export function KanbanBoard() {
               willChange: 'transform',
             }}
           >
-            <div className="flex gap-3 p-4 h-full items-stretch md:gap-5 md:p-6">
+            <div className="flex gap-3 p-4 items-start md:gap-5 md:p-6">
               {KANBAN_COLUMNS.map((col) => (
                 <KanbanColumn
                   key={col.id}
@@ -326,6 +437,10 @@ export function KanbanBoard() {
                   onFilterChange={(partial) => updateFilter(col.id, partial)}
                   allTags={allTags}
                   allAuthors={allAuthors}
+                  isOpen={isColumnOpen(col.id)}
+                  onToggle={() => toggleColumn(col.id)}
+                  width={getColumnWidth(col.id)}
+                  onResizeStart={(clientX) => startResize(col.id, clientX)}
                 />
               ))}
             </div>

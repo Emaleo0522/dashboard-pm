@@ -2,9 +2,12 @@
 import { useState } from 'react'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
-import { Plus, Filter, X, Search } from 'lucide-react'
+import { Plus, Filter, X, Search, ChevronRight, ChevronDown, GripVertical } from 'lucide-react'
 import { KanbanCard } from './KanbanCard'
 import { useBacklogStore } from '@/store/useBacklogStore'
+import {
+  COLUMN_COLLAPSED_WIDTH,
+} from '@/types/backlog'
 import type { BacklogCard, KanbanColumnId } from '@/types/backlog'
 import type { ColumnFilters } from './KanbanBoard'
 import { cn } from '@/lib/utils'
@@ -18,6 +21,10 @@ interface KanbanColumnProps {
   onFilterChange: (partial: Partial<ColumnFilters>) => void
   allTags: string[]
   allAuthors: string[]
+  isOpen: boolean
+  onToggle: () => void
+  width: number
+  onResizeStart: (clientX: number) => void
 }
 
 type PriorityValue = '' | 'urgent' | 'high' | 'medium' | 'low'
@@ -33,6 +40,10 @@ export function KanbanColumn({
   onFilterChange,
   allTags,
   allAuthors,
+  isOpen,
+  onToggle,
+  width,
+  onResizeStart,
 }: KanbanColumnProps) {
   const [adding, setAdding] = useState(false)
   const [newTitle, setNewTitle] = useState('')
@@ -91,21 +102,68 @@ export function KanbanColumn({
     onFilterChange({ tags: [], keyword: '', author: '' })
   }
 
-  return (
-    <div ref={setDropRef} className={cn(
-      'flex flex-col w-60 shrink-0 rounded-xl transition-all duration-150 lg:w-72 min-h-full',
-      isOver ? 'ring-2 ring-accent/40 bg-accent-dim/20' : ''
-    )}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-1 mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-            {label}
-          </span>
-          <span className="text-xs text-text-muted bg-surface-raised px-1.5 py-0.5 rounded-full">
+  const renderedWidth = isOpen ? width : COLUMN_COLLAPSED_WIDTH
+
+  // Collapsed view: vertical strip with rotated label, drop zone still active
+  if (!isOpen) {
+    return (
+      <div
+        ref={setDropRef}
+        className={cn(
+          'group relative flex shrink-0 flex-col items-center rounded-xl border border-border/60 bg-surface-secondary/40 transition-colors cursor-pointer hover:bg-surface-secondary/70',
+          isOver && 'ring-2 ring-accent/40 bg-accent-dim/20',
+          isFiltered && 'border-accent/30'
+        )}
+        style={{ width: renderedWidth, minHeight: 320 }}
+        onClick={onToggle}
+        title={`Expandir "${label}"`}
+      >
+        <div className="flex flex-col items-center gap-2 py-3">
+          <ChevronRight size={14} className="text-text-muted" />
+          <span className="text-xs text-text-muted bg-surface-raised px-1.5 py-0.5 rounded-full tabular-nums">
             {isFiltered ? `${cards.length}/${totalCards}` : totalCards}
           </span>
         </div>
+        <div
+          className="flex-1 flex items-center justify-center px-1 py-2 select-none"
+          style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+        >
+          <span className="text-[11px] font-semibold text-text-secondary uppercase tracking-wider whitespace-nowrap">
+            {label}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // Open view: full content + resize handle on right edge
+  return (
+    <div
+      ref={setDropRef}
+      className={cn(
+        'relative flex flex-col shrink-0 rounded-xl transition-colors duration-150 min-h-[320px]',
+        isOver && 'ring-2 ring-accent/40 bg-accent-dim/20'
+      )}
+      style={{ width: renderedWidth }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between px-1 mb-2">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-2 group/header text-left"
+          title="Colapsar"
+        >
+          <ChevronDown
+            size={13}
+            className="text-text-muted group-hover/header:text-text-primary transition-colors"
+          />
+          <span className="text-xs font-semibold text-text-secondary uppercase tracking-wider group-hover/header:text-text-primary transition-colors">
+            {label}
+          </span>
+          <span className="text-xs text-text-muted bg-surface-raised px-1.5 py-0.5 rounded-full tabular-nums">
+            {isFiltered ? `${cards.length}/${totalCards}` : totalCards}
+          </span>
+        </button>
         <div className="flex items-center gap-1">
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -122,6 +180,7 @@ export function KanbanColumn({
           <button
             onClick={() => setAdding(true)}
             className="text-text-muted hover:text-text-primary transition-colors p-0.5 rounded"
+            title="Agregar tarjeta"
           >
             <Plus size={14} />
           </button>
@@ -201,9 +260,7 @@ export function KanbanColumn({
       )}
 
       {/* Cards area */}
-      <div
-        className="flex-1 space-y-2 min-h-[200px] rounded-xl p-2.5 bg-surface-raised/30 h-full"
-      >
+      <div className="flex-1 space-y-2 min-h-[200px] rounded-xl p-2.5 bg-surface-raised/30">
         <SortableContext items={cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
           {cards.map((card) => (
             <KanbanCard key={card.id} card={card} />
@@ -301,6 +358,25 @@ export function KanbanColumn({
           </div>
         </div>
       )}
+
+      {/* Resize handle on right edge — only when open */}
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={`Redimensionar columna ${label}`}
+        onPointerDown={(e) => {
+          e.stopPropagation()
+          e.preventDefault()
+          onResizeStart(e.clientX)
+        }}
+        className="absolute top-0 right-[-6px] bottom-0 w-3 z-10 cursor-col-resize flex items-center justify-center group"
+      >
+        <div className="w-px h-12 bg-border group-hover:bg-accent/60 transition-colors" />
+        <GripVertical
+          size={10}
+          className="absolute text-text-muted/0 group-hover:text-accent transition-colors"
+        />
+      </div>
     </div>
   )
 }
