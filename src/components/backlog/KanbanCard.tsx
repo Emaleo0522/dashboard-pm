@@ -3,19 +3,31 @@
 import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Pencil, X, GripVertical, Send, Check, AlertCircle } from 'lucide-react'
+import {
+  Pencil,
+  X,
+  GripVertical,
+  Send,
+  Check,
+  AlertCircle,
+  ChevronRight,
+  ChevronDown,
+} from 'lucide-react'
 import { useBacklogStore } from '@/store/useBacklogStore'
 import type { BacklogCard } from '@/types/backlog'
 
 interface KanbanCardProps {
   card: BacklogCard
   isOverlay?: boolean
+  isOpen: boolean
+  onToggle: () => void
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
   low: 'bg-emerald-500/20 text-emerald-400',
   medium: 'bg-amber-500/20 text-amber-400',
   high: 'bg-red-500/20 text-red-400',
+  urgent: 'bg-red-500/30 text-red-300',
 }
 
 const CARD_COLOR_STYLES: Record<string, { border: string; dot: string }> = {
@@ -29,7 +41,7 @@ const CARD_COLOR_STYLES: Record<string, { border: string; dot: string }> = {
 const COLOR_OPTIONS = ['indigo', 'violet', 'emerald', 'amber', 'rose'] as const
 type CardColor = typeof COLOR_OPTIONS[number]
 
-export function KanbanCard({ card, isOverlay }: KanbanCardProps) {
+export function KanbanCard({ card, isOverlay, isOpen, onToggle }: KanbanCardProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')
@@ -92,6 +104,16 @@ export function KanbanCard({ card, isOverlay }: KanbanCardProps) {
       setSendingToLinear(false)
     }
   }
+
+  // While editing, force the card to render expanded
+  const expanded = isOpen || editing
+  const hasMore = Boolean(
+    card.description ||
+      (card.tags && card.tags.length > 0) ||
+      card.priority ||
+      card.createdBy ||
+      linearIssueId
+  )
 
   return (
     <div
@@ -203,73 +225,144 @@ export function KanbanCard({ card, isOverlay }: KanbanCardProps) {
           </div>
         ) : (
           <>
-            <p className="text-sm text-text-primary font-medium leading-snug pr-12">{card.title}</p>
-            {card.description && (
-              <p className="text-xs text-text-muted mt-1 leading-relaxed">{card.description}</p>
-            )}
-
-            {/* Tags */}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {tags.map(tag => (
-                  <span key={tag} className="text-xs bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Priority badge */}
-            {card.priority && (
-              <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLORS[card.priority] || ''}`}>
-                {card.priority}
-              </span>
-            )}
-
-            {/* Creator badge */}
-            {card.createdBy && (
-              <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-surface-tertiary text-text-muted border border-border">
-                {card.createdBy}
-              </span>
-            )}
-
-            {/* Linear issue badge */}
-            {linearIssueId && (
-              <div className="mt-2 flex items-center gap-1 text-xs text-emerald-400">
-                <Check size={12} />
-                <span>En Linear: {linearIssueId}</span>
-              </div>
-            )}
-            {linearError && (
-              <div className="mt-1 flex items-center gap-1 text-xs text-red-400">
-                <AlertCircle size={12} />
-                <span>{linearError}</span>
-              </div>
-            )}
-
-            {/* Send to Linear button — solo cuando columnId === 'ready' */}
-            {card.columnId === 'ready' && !linearIssueId && (
-              <button
-                onClick={handleSendToLinear}
-                disabled={sendingToLinear}
-                className="mt-2 flex items-center gap-1 text-xs bg-brand-primary/20 text-brand-primary px-2 py-1 rounded hover:bg-brand-primary/30 disabled:opacity-50"
+            {/* Title row with collapse chevron */}
+            <div className="flex items-start gap-1.5 pr-12">
+              {hasMore && (
+                <button
+                  type="button"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onToggle()
+                  }}
+                  className="mt-0.5 shrink-0 text-text-muted hover:text-text-primary transition-colors"
+                  title={expanded ? 'Colapsar' : 'Expandir'}
+                  aria-expanded={expanded}
+                >
+                  {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                </button>
+              )}
+              <p
+                className={`text-sm text-text-primary font-medium leading-snug flex-1 ${
+                  hasMore ? 'cursor-pointer' : ''
+                }`}
+                onPointerDown={(e) => {
+                  if (hasMore) e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  if (!hasMore) return
+                  e.stopPropagation()
+                  onToggle()
+                }}
               >
-                <Send size={11} />
-                {sendingToLinear ? 'Enviando...' : 'Push a Linear'}
-              </button>
+                {card.title}
+              </p>
+            </div>
+
+            {/* Expanded content */}
+            {expanded && (
+              <>
+                {card.description && (
+                  <p className="text-xs text-text-muted mt-1 leading-relaxed whitespace-pre-wrap">
+                    {card.description}
+                  </p>
+                )}
+
+                {/* Tags */}
+                {tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {tags.map(tag => (
+                      <span key={tag} className="text-xs bg-brand-primary/20 text-brand-primary px-2 py-0.5 rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Priority badge */}
+                {card.priority && (
+                  <span className={`inline-block mt-1 text-xs px-2 py-0.5 rounded-full ${PRIORITY_COLORS[card.priority] || ''}`}>
+                    {card.priority}
+                  </span>
+                )}
+
+                {/* Creator badge */}
+                {card.createdBy && (
+                  <span className="inline-block mt-1 text-[10px] px-1.5 py-0.5 rounded bg-surface-tertiary text-text-muted border border-border">
+                    {card.createdBy}
+                  </span>
+                )}
+
+                {/* Linear issue badge */}
+                {linearIssueId && (
+                  <div className="mt-2 flex items-center gap-1 text-xs text-emerald-400">
+                    <Check size={12} />
+                    <span>En Linear: {linearIssueId}</span>
+                  </div>
+                )}
+                {linearError && (
+                  <div className="mt-1 flex items-center gap-1 text-xs text-red-400">
+                    <AlertCircle size={12} />
+                    <span>{linearError}</span>
+                  </div>
+                )}
+
+                {/* Send to Linear button — solo cuando columnId === 'ready' */}
+                {card.columnId === 'ready' && !linearIssueId && (
+                  <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleSendToLinear()
+                    }}
+                    disabled={sendingToLinear}
+                    className="mt-2 flex items-center gap-1 text-xs bg-brand-primary/20 text-brand-primary px-2 py-1 rounded hover:bg-brand-primary/30 disabled:opacity-50"
+                  >
+                    <Send size={11} />
+                    {sendingToLinear ? 'Enviando...' : 'Push a Linear'}
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* Collapsed indicator: small badges that survive collapse for context */}
+            {!expanded && (card.priority || linearIssueId) && (
+              <div className="flex flex-wrap items-center gap-1 mt-1.5 ml-[18px]">
+                {card.priority && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${PRIORITY_COLORS[card.priority] || ''}`}>
+                    {card.priority}
+                  </span>
+                )}
+                {linearIssueId && (
+                  <span className="flex items-center gap-1 text-[10px] text-emerald-400">
+                    <Check size={10} />
+                    Linear
+                  </span>
+                )}
+              </div>
             )}
 
             {/* Action buttons */}
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
-                onClick={() => setEditing(true)}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditing(true)
+                }}
                 className="p-1 rounded hover:bg-surface-tertiary text-text-muted hover:text-text-primary"
+                title="Editar"
               >
                 <Pencil size={12} />
               </button>
               <button
-                onClick={() => setConfirmDelete(true)}
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setConfirmDelete(true)
+                }}
                 className="p-1 rounded hover:bg-surface-tertiary text-text-muted hover:text-red-400"
+                title="Eliminar"
               >
                 <X size={12} />
               </button>
@@ -277,16 +370,19 @@ export function KanbanCard({ card, isOverlay }: KanbanCardProps) {
 
             {/* Confirm delete */}
             {confirmDelete && (
-              <div className="mt-2 flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded p-2">
+              <div
+                className="mt-2 flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded p-2"
+                onPointerDown={(e) => e.stopPropagation()}
+              >
                 <span className="text-xs text-red-400">¿Eliminar?</span>
                 <button
-                  onClick={() => deleteCard(card.id)}
+                  onClick={(e) => { e.stopPropagation(); deleteCard(card.id) }}
                   className="text-xs bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600"
                 >
                   Sí
                 </button>
                 <button
-                  onClick={() => setConfirmDelete(false)}
+                  onClick={(e) => { e.stopPropagation(); setConfirmDelete(false) }}
                   className="text-xs bg-surface-tertiary text-text-secondary px-2 py-0.5 rounded hover:bg-border"
                 >
                   No

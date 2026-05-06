@@ -18,7 +18,7 @@ import {
   COLUMN_DEFAULT_WIDTH,
   COLUMN_MIN_WIDTH,
   COLUMN_MAX_WIDTH,
-  MAX_OPEN_COLUMNS,
+  MAX_OPEN_CARDS,
 } from '@/types/backlog'
 import type { KanbanColumnId } from '@/types/backlog'
 import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
@@ -27,7 +27,7 @@ const MIN_ZOOM = 0.3
 const MAX_ZOOM = 1.5
 const ZOOM_STEP = 0.1
 
-const STORAGE_OPEN_KEY = 'backlog:open-columns'
+const STORAGE_OPEN_CARDS_KEY = 'backlog:open-cards'
 const STORAGE_WIDTH_KEY = 'backlog:column-widths'
 
 export interface ColumnFilters {
@@ -85,18 +85,14 @@ export function KanbanBoard() {
   // Per-column filters
   const [filters, setFilters] = useState<Record<string, ColumnFilters>>({})
 
-  // Open columns (FIFO max 3) — start collapsed, persist in localStorage
-  const [openCols, setOpenCols] = useState<KanbanColumnId[]>([])
+  // Open cards (FIFO max 3) — start collapsed, persist in localStorage
+  const [openCards, setOpenCards] = useState<string[]>([])
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({})
   const [hasHydrated, setHasHydrated] = useState(false)
 
   useEffect(() => {
-    const validIds = new Set(KANBAN_COLUMNS.map((c) => c.id))
-    const stored = readJSON<KanbanColumnId[]>(STORAGE_OPEN_KEY, [])
-    const cleanOpen = stored
-      .filter((id): id is KanbanColumnId => validIds.has(id as KanbanColumnId))
-      .slice(0, MAX_OPEN_COLUMNS)
-    setOpenCols(cleanOpen)
+    const stored = readJSON<string[]>(STORAGE_OPEN_CARDS_KEY, [])
+    setOpenCards(stored.slice(0, MAX_OPEN_CARDS))
     const widths = readJSON<Record<string, number>>(STORAGE_WIDTH_KEY, {})
     setColumnWidths(widths)
     setHasHydrated(true)
@@ -104,27 +100,37 @@ export function KanbanBoard() {
 
   useEffect(() => {
     if (!hasHydrated) return
-    writeJSON(STORAGE_OPEN_KEY, openCols)
-  }, [openCols, hasHydrated])
+    writeJSON(STORAGE_OPEN_CARDS_KEY, openCards)
+  }, [openCards, hasHydrated])
 
   useEffect(() => {
     if (!hasHydrated) return
     writeJSON(STORAGE_WIDTH_KEY, columnWidths)
   }, [columnWidths, hasHydrated])
 
-  const isColumnOpen = useCallback(
-    (id: KanbanColumnId) => openCols.includes(id),
-    [openCols]
+  // Prune openCards if a card disappears (deleted/moved cleanup)
+  useEffect(() => {
+    if (!hasHydrated || cards.length === 0) return
+    setOpenCards((prev) => {
+      const valid = new Set(cards.map((c) => c.id))
+      const next = prev.filter((id) => valid.has(id))
+      return next.length === prev.length ? prev : next
+    })
+  }, [cards, hasHydrated])
+
+  const isCardOpen = useCallback(
+    (id: string) => openCards.includes(id),
+    [openCards]
   )
 
-  const toggleColumn = useCallback((id: KanbanColumnId) => {
-    setOpenCols((prev) => {
+  const toggleCard = useCallback((id: string) => {
+    setOpenCards((prev) => {
       if (prev.includes(id)) {
         return prev.filter((c) => c !== id)
       }
       const next = [...prev, id]
-      if (next.length > MAX_OPEN_COLUMNS) {
-        return next.slice(next.length - MAX_OPEN_COLUMNS)
+      if (next.length > MAX_OPEN_CARDS) {
+        return next.slice(next.length - MAX_OPEN_CARDS)
       }
       return next
     })
@@ -383,7 +389,7 @@ export function KanbanBoard() {
 
       {/* Pan/zoom hint */}
       <div className="absolute bottom-3 left-3 z-20 text-[10px] text-text-muted/50 select-none pointer-events-none">
-        Scroll: zoom | Alt+Drag: mover lienzo | Click header: expandir/colapsar (max {MAX_OPEN_COLUMNS}) | Borde derecho: redimensionar
+        Scroll: zoom | Alt+Drag: mover lienzo | Click chevron: expandir tarjeta (max {MAX_OPEN_CARDS}) | Borde derecho columna: redimensionar
       </div>
 
       {/* Scroll fade indicators for tablet — hint that more columns exist */}
@@ -425,7 +431,7 @@ export function KanbanBoard() {
               willChange: 'transform',
             }}
           >
-            <div className="flex gap-3 p-4 items-start md:gap-5 md:p-6">
+            <div className="flex gap-3 p-4 h-full items-stretch md:gap-5 md:p-6">
               {KANBAN_COLUMNS.map((col) => (
                 <KanbanColumn
                   key={col.id}
@@ -437,10 +443,10 @@ export function KanbanBoard() {
                   onFilterChange={(partial) => updateFilter(col.id, partial)}
                   allTags={allTags}
                   allAuthors={allAuthors}
-                  isOpen={isColumnOpen(col.id)}
-                  onToggle={() => toggleColumn(col.id)}
                   width={getColumnWidth(col.id)}
                   onResizeStart={(clientX) => startResize(col.id, clientX)}
+                  isCardOpen={isCardOpen}
+                  onCardToggle={toggleCard}
                 />
               ))}
             </div>
@@ -448,7 +454,12 @@ export function KanbanBoard() {
           <DragOverlay dropAnimation={null}>
             {activeCard ? (
               <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}>
-                <KanbanCard card={activeCard} isOverlay />
+                <KanbanCard
+                  card={activeCard}
+                  isOverlay
+                  isOpen={isCardOpen(activeCard.id)}
+                  onToggle={() => toggleCard(activeCard.id)}
+                />
               </div>
             ) : null}
           </DragOverlay>

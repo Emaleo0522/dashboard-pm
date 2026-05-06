@@ -35,5 +35,5 @@ export const KANBAN_COLUMNS: { id: KanbanColumnId; label: string }[] = [
 export const COLUMN_MIN_WIDTH = 240
 export const COLUMN_MAX_WIDTH = 640
 export const COLUMN_DEFAULT_WIDTH = 288
-export const COLUMN_COLLAPSED_WIDTH = 56
-export const MAX_OPEN_COLUMNS = 3
+// Max number of expanded cards across the whole board (FIFO)
+export const MAX_OPEN_CARDS = 3
